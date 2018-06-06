@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Test prikol</title>
+    <link href="../dist/css/inputWithSearch.css" type="text/css" rel="stylesheet">
+    <link href="../node_modules/perfect-scrollbar/css/perfect-scrollbar.css" type="text/css" rel="stylesheet">
+    <style>
+        body{
+            margin: 0;
+            padding: 0;
+        }
+        .container{
+            max-width: 920px;
+            padding: 0 20px;
+            margin: 0 auto;
+        }
+        .wrapper{
+            display: flex;
+            flex-direction: column;
+            margin: 0 -20px;
+        }
+        .element{
+            padding: 20px;
+        }
+        @media (min-width: 800px) {
+            .wrapper{
+                flex-direction: row;
+                flex-wrap: nowrap;
+            }
+            .element{
+                width: 33.33334%;
+            }
+        }
+        .wrapperTest4{
+            position: fixed;
+            left: 20px;
+            top: 100px;
+            z-index: 5;
+        }
+        .wrapperTest5{
+            position: fixed;
+            left: 50%;
+            top: 100px;
+            z-index: 5;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="wrapper">
+            <div class="element"><label for="test1">Label1</label><input type="text" id="test1"></div>
+            <div class="element"><label for="test2">Label2</label><input type="text" id="test2"></div>
+            <div class="element"><label for="test3">Label3</label><input type="text" id="test3"></div>
+        </div>
+    </div>
+    <div class="wrapperTest4"><div id="test4">Test</div></div>
+    <div class="wrapperTest5"><div id="test5">Test</div></div>
+
+    <script src="../node_modules/babel-polyfill/dist/polyfill.min.js"></script>
+    <script src="../node_modules/perfect-scrollbar/dist/perfect-scrollbar.min.js"></script>
+    <script src="../dist/js/inputWithSearch.js"></script>
+
+    <script>
+
+
+        const filterData = (data, value) => {
+            return data.indexOf(value) !== -1;
+        };
+
+        inputWithSearch.getElement(document.getElementById('test1'), {
+            useCache: true,
+            loadOnlyStart: false,
+            classes: {
+                wrapper: ['test'],
+                elementList: ['test2']
+            }
+        });
+        inputWithSearch.getElement('test2', {
+            useCache: true,
+            loadOnlyStart: true,
+            fns: {
+                filterData: filterData
+            }
+        });
+        inputWithSearch.getElement('test3', {
+            callbacks: {
+                inputWithSearch_onClickOption: (...args) => {
+                    console.log('click');
+                    console.log(args);
+                }
+            }
+        }, ['withPerfectScrollbar']).setCustomData(
+            [
+                'test1',
+                'test2',
+                'test3',
+                'test4',
+                'test5',
+                'test6'
+            ]
+        );
+
+        inputWithSearch.getElement('test4', {
+            onEvents: 'click',
+            triangle: true,
+            classes: {
+                wrapper: ['test']
+            },
+            fns: {
+                fnSetValueToInput: (relativeDomElement, value) => {
+                    relativeDomElement.innerHTML = value + Math.random();
+                }
+            },
+            baseWindowEventsActive: {
+                interceptionEvents: false,
+                mouseEnterElement: false,
+                clickElement: false
+            }
+        }).setCustomData(
+            [
+                'test text for checking projects things',
+                'test2',
+                'test3'
+            ]
+        );
+
+        inputWithSearch.getElement('test5', {
+            onEvents: 'hover',
+            triangle: true,
+            classes: {
+                wrapper: ['test']
+            },
+            fns: {
+                fnSetValueToInput: (relativeDomElement, value) => {}
+            },
+            baseWindowEventsActive: {
+                interceptionEvents: false,
+                mouseEnterElement: false,
+                clickElement: false
+            }
+        }).setCustomData(
+            [
+                'test text for checking projects things'
+            ]
+        );
+    </script>
+</body>
+</html>

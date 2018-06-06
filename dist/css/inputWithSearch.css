@@ -1,0 +1,94 @@
+body {
+  position: relative; }
+
+.InputWithSearchWindow {
+  position: absolute;
+  top: 0;
+  left: 0;
+  z-index: 200; }
+  .InputWithSearchWindow-Sub {
+    background-color: #fff;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    -webkit-box-shadow: 0 0 3px 0 rgba(0, 0, 0, 0.4);
+            box-shadow: 0 0 3px 0 rgba(0, 0, 0, 0.4); }
+  .InputWithSearchWindow-Inner {
+    overflow: auto;
+    max-height: 200px;
+    position: relative; }
+  .InputWithSearchWindow-Load {
+    padding: 20px;
+    text-align: center; }
+    .InputWithSearchWindow-Load .InputWithSearchLoader {
+      display: inline-block; }
+  .InputWithSearchWindow-Element {
+    border-bottom: 1px solid #ccc;
+    cursor: pointer;
+    font-size: 16px;
+    line-height: 1.2em;
+    padding: 10px 16px; }
+    .InputWithSearchWindow-Element:last-child {
+      border-bottom: none; }
+    .InputWithSearchWindow-Element_selected {
+      background: rgba(0, 0, 0, 0.3); }
+  .InputWithSearchWindow-LessSymbols, .InputWithSearchWindow-Error {
+    padding: 20px 16px; }
+  .InputWithSearchWindow-Coincidence {
+    color: #0d95e8; }
+  .InputWithSearchWindow-Triangle {
+    height: 15px;
+    width: 28px;
+    overflow: hidden;
+    position: relative;
+    top: 1px;
+    margin-top: -1px; }
+    .InputWithSearchWindow-Triangle:before, .InputWithSearchWindow-Triangle:after {
+      content: "";
+      display: block;
+      height: 0;
+      width: 0;
+      border-style: solid;
+      position: absolute;
+      top: 100%;
+      left: 0;
+      border-width: 10px;
+      -webkit-transform-origin: 0 0;
+              transform-origin: 0 0;
+      -webkit-transform: rotate(-45deg);
+              transform: rotate(-45deg); }
+    .InputWithSearchWindow-Triangle:before {
+      border-color: #ccc #ccc transparent transparent;
+      -webkit-box-shadow: 0 0 3px 0 rgba(0, 0, 0, 0.4);
+              box-shadow: 0 0 3px 0 rgba(0, 0, 0, 0.4); }
+    .InputWithSearchWindow-Triangle:after {
+      border-color: white white transparent transparent;
+      margin-top: 1px; }
+
+.InputWithSearchLoader {
+  width: 48px;
+  height: 48px;
+  color: #fff;
+  display: block;
+  position: relative; }
+  .InputWithSearchLoader-Loader {
+    display: block;
+    height: 100%;
+    width: 100%;
+    border: 3px solid #fff;
+    border-radius: 100%;
+    border-left-color: #0d95e8;
+    -webkit-animation: InputWithSearchLoaderAnimation 0.5s infinite linear;
+            animation: InputWithSearchLoaderAnimation 0.5s infinite linear; }
+
+@-webkit-keyframes InputWithSearchLoaderAnimation {
+  100% {
+    -webkit-transform: rotate(360deg);
+            transform: rotate(360deg); } }
+
+@keyframes InputWithSearchLoaderAnimation {
+  100% {
+    -webkit-transform: rotate(360deg);
+            transform: rotate(360deg); } }
+
+
+/*# sourceMappingURL=inputWithSearch.css.map*/
