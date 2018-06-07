@@ -1042,7 +1042,8 @@ var InputWithSearch = function () {
                 cssParams: this.settings.cssParamsWindow,
                 triangle: this.settings.triangle,
                 relativeDomElement: this.domElement,
-                baseEventsActive: this.settings.baseWindowEventsActive
+                baseEventsActive: this.settings.baseWindowEventsActive,
+                maxViewElements: this.settings.maxViewElements
             };
         }
     }], [{
@@ -1949,9 +1950,16 @@ var InputWithSearchWindow = function () {
         value: function addListElements(dataList, value) {
             var _this3 = this;
 
+            var filterData = function filterData(arr, maxLength) {
+                return arr.length > maxLength ? arr.slice(0, maxLength) : arr;
+            };
+
             this.addInfoToList('');
             this.addDataListSave(dataList);
-            dataList.forEach(function (dataElement, numb) {
+
+            var viewElements = this.settings.maxViewElements < dataList.length ? this.settings.maxViewElements : dataList.length;
+
+            filterData(dataList, viewElements).forEach(function (dataElement, numb) {
                 _this3.addInfoToList(InputWithSearchWindow.constructElement(dataElement, value, numb, _this3.settings.constructors['element'], _this3.getClassesByKey('elementList', true)), true);
             });
         }
@@ -2050,7 +2058,8 @@ var InputWithSearchWindow = function () {
                 cssParams: this.defaultCssParams,
                 triangle: false,
                 relativeDomElement: false,
-                baseEventsActive: this.baseEventsActive
+                baseEventsActive: this.baseEventsActive,
+                maxViewElements: 50
             };
         }
     }, {

@@ -402,7 +402,8 @@ class InputWithSearchWindow{
             cssParams: this.defaultCssParams,
             triangle: false,
             relativeDomElement: false,
-            baseEventsActive: this.baseEventsActive
+            baseEventsActive: this.baseEventsActive,
+            maxViewElements: 50
         };
     }
 
@@ -449,20 +450,33 @@ class InputWithSearchWindow{
     }
 
     addListElements(dataList, value){
+
+        const filterData = (arr, maxLength) => {
+            return arr.length > maxLength
+                ? arr.slice(0, maxLength)
+                : arr;
+        };
+
         this.addInfoToList('');
         this.addDataListSave(dataList);
-        dataList.forEach((dataElement, numb) => {
-            this.addInfoToList(
-                InputWithSearchWindow.constructElement(
-                    dataElement,
-                    value,
-                    numb,
-                    this.settings.constructors['element'],
-                    this.getClassesByKey('elementList', true)
-                ),
-                true
-            );
-        });
+
+        let viewElements = this.settings.maxViewElements < dataList.length
+            ? this.settings.maxViewElements
+            : dataList.length;
+
+        filterData(dataList, viewElements)
+            .forEach((dataElement, numb) => {
+                this.addInfoToList(
+                    InputWithSearchWindow.constructElement(
+                        dataElement,
+                        value,
+                        numb,
+                        this.settings.constructors['element'],
+                        this.getClassesByKey('elementList', true)
+                    ),
+                    true
+                );
+            });
     }
 
     setToMessage(typeMessage, params){

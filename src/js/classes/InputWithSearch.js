@@ -483,7 +483,8 @@ class InputWithSearch{
             cssParams: this.settings.cssParamsWindow,
             triangle: this.settings.triangle,
             relativeDomElement: this.domElement,
-            baseEventsActive: this.settings.baseWindowEventsActive
+            baseEventsActive: this.settings.baseWindowEventsActive,
+            maxViewElements: this.settings.maxViewElements
         };
     }
 
