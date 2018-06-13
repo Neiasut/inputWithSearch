@@ -1700,7 +1700,7 @@ var InputWithSearchWindow = function () {
                 domElement: document,
                 events: 'click',
                 fn: function fn(event) {
-                    if (event.target.closest('.' + _this2.getClassesByKey('wrapper')) || _functions2.default.hasClass(event.target, 'InputWithSearch')) {
+                    if (event.target.closest('.' + _this2.getClassesByKey('wrapper') + ', .InputWithSearch')) {
                         return;
                     }
                     _this2.destructor();

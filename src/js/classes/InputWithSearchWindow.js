@@ -169,8 +169,7 @@ class InputWithSearchWindow{
                 domElement: document,
                 events: 'click',
                 fn: (event) => {
-                    if (event.target.closest(`.${this.getClassesByKey('wrapper')}`)
-                        || funcs.hasClass(event.target, 'InputWithSearch')){
+                    if (event.target.closest(`.${this.getClassesByKey('wrapper')}, .InputWithSearch`)){
                         return;
                     }
                     this.destructor();
