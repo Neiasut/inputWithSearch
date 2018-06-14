@@ -344,7 +344,7 @@ class InputWithSearchWindow{
             left = winWidth - width - mRight;
         }
 
-        style.top = scroll + elem_character.bottom + 'px';
+        style.top = scroll + elem_character.bottom - (scroll + document.body.getBoundingClientRect().top) + 'px';
         style.left = Math.ceil(left) + 'px';
         style.width = width + 'px';
         style.position = 'absolute';

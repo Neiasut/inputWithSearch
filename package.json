@@ -1,6 +1,6 @@
 {
   "name": "inputwithsearch",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "description": "project for cutsom search and some other things.",
   "main": "index.js",
   "author": "neiasut",
@@ -30,6 +30,7 @@
   },
   "scripts": {
     "build": "webpack --config config/webpack.prod.config.js --mode production",
-    "dev": "webpack --config config/webpack.dev.config.js --mode development"
+    "dev": "webpack --config config/webpack.dev.config.js --mode development",
+    "pack": "yarn run build && yarn run dev"
   }
 }

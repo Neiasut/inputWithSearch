@@ -5,7 +5,9 @@ export default function runDefaultThemes() {
             let listeners = object.getListeners();
             listeners.addCustomRecord('test_afterOpen', 'inputWithSearch_afterOpen', () => {
                 let wrapperInner = object.inputWithSearchWindow.getElementByKey('wrapperInner');
-                const ps = new window.PerfectScrollbar(wrapperInner);
+                const ps = new window.PerfectScrollbar(wrapperInner, {
+                    wheelPropagation: false
+                });
                 object.getCustomContainer().set('customScroll', ps);
             });
             listeners.addCustomRecord('test_onChangeWindow', 'inputWithSearch_onChangeWindow', () => {

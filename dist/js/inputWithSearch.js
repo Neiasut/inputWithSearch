@@ -1894,7 +1894,7 @@ var InputWithSearchWindow = function () {
                 left = winWidth - width - mRight;
             }
 
-            style.top = scroll + elem_character.bottom + 'px';
+            style.top = scroll + elem_character.bottom - (scroll + document.body.getBoundingClientRect().top) + 'px';
             style.left = Math.ceil(left) + 'px';
             style.width = width + 'px';
             style.position = 'absolute';
@@ -2405,7 +2405,9 @@ function runDefaultThemes() {
             var listeners = object.getListeners();
             listeners.addCustomRecord('test_afterOpen', 'inputWithSearch_afterOpen', function () {
                 var wrapperInner = object.inputWithSearchWindow.getElementByKey('wrapperInner');
-                var ps = new window.PerfectScrollbar(wrapperInner);
+                var ps = new window.PerfectScrollbar(wrapperInner, {
+                    wheelPropagation: false
+                });
                 object.getCustomContainer().set('customScroll', ps);
             });
             listeners.addCustomRecord('test_onChangeWindow', 'inputWithSearch_onChangeWindow', function () {
