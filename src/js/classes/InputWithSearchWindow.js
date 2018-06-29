@@ -14,8 +14,7 @@ class InputWithSearchWindow{
         this.dependElement = dependElement;
         this.setBlockHoverSelected();
 
-        this.setSelectedNumb();
-        this.clearDataListSave();
+        this.setStatus();
 
         this.reSetPosition();
     }
@@ -101,10 +100,12 @@ class InputWithSearchWindow{
         this.fireEventAndCallback('inputWithSearchWindow_destruction');
         this.removeListeners();
         this.removeMutationObserver();
+        this._setHoveredKey('clear');
         this.destructorDOM();
     }
 
     fireEventAndCallback(name, data = {}){
+
         if (name in InputWithSearchWindow.listCallbacksAndEvents){
             let caller = this.elements.wrapper;
             let dataToOutput = {
@@ -151,6 +152,7 @@ class InputWithSearchWindow{
                 domElement: wrapper,
                 events: 'click',
                 fn: (event) => funcs.delegateFn(event, elemListClass, (e, elem) => {
+                    this.setElemListActiveByKey( InputWithSearchWindow._getKeyAttrFromDomElement(e.target) );
                     this.fireEventAndCallback('inputWithSearchWindow_clickOnElementList', elem);
                 }),
                 protectedStatus: true
@@ -182,7 +184,7 @@ class InputWithSearchWindow{
                 events: 'mouseover',
                 fn: (e) => funcs.delegateFn(e, elemListClass, (e, elem) => {
                     if (!this.checkBlockHoverSelected()){
-                        this.setElemListActive(elem);
+                        this._setElemListHover(elem);
                     }
                 }),
                 protectedStatus: true
@@ -194,7 +196,8 @@ class InputWithSearchWindow{
                 fn: (event) => {
 
                     let windowSh = this;
-                    let relativeClass = window.inputWithSearch.getElement(this.settings.relativeDomElement);
+                    let relativeClass = this.getRelativeObject();
+
 
                     if (relativeClass.checkStatus(1)){
 
@@ -202,26 +205,29 @@ class InputWithSearchWindow{
                         const up = event.keyCode === 38;
                         const enter = event.keyCode === 13;
 
-                        if ((up || down) && windowSh.checkDataSave()){
+                        if ((up || down) && windowSh.checkStatus()){
                             event.preventDefault();
                             this.timerWaitToBlockHoverSelected = setTimeoutOnBlockSelected(
                                 this.timerWaitToBlockHoverSelected,
                                 windowSh
                             );
                             if ( down ){
-                                windowSh.setElemListActiveByDirection();
+                                windowSh.setElemListHoverByDirection();
                             }
                             if ( up ){
-                                windowSh.setElemListActiveByDirection(false);
+                                windowSh.setElemListHoverByDirection(false);
                             }
                         }
 
                         if (enter){
-                            if (windowSh.getSelectedNumb() !== -1){
-                                relativeClass.setActiveByNumbFromList(
-                                    windowSh.getSelectedNumb()
-                                );
+
+                            const hoveredKey = windowSh._getHoveredKey();
+
+                            if (hoveredKey !== 'null'){
+                                this.setElemListActiveByKey( hoveredKey );
+                                relativeClass._setActiveByKeyFromList( hoveredKey );
                             }
+
                             relativeClass.close();
                         }
                     }
@@ -239,51 +245,109 @@ class InputWithSearchWindow{
         });
     }
 
-    setElemListActiveByNumb(numb){
-        if (this.checkDataSave()){
-            if (numb < this.getDataFromSave().length){
-                if (numb < 0){
-                    this.unSelectedElements();
-                } else {
-                    const classes = this.getClassesByKey('elementList')[0];
-                    let domElement = this.elements.wrapper.querySelector(`.${classes}[data-numb="${numb}"]`);
-                    if (domElement !== null){
-                        this.setElemListActive(domElement, true, numb);
-                    }
-                }
+    /**
+     *
+     * @return {InputWithSearch}
+     */
+    getRelativeObject(){
+        return window.inputWithSearch.getElement(this.dependElement);
+    }
+
+    setElemListHoverByKey(key, withScroll = true){
+        if (this.checkStatus() && this._getList().checkKeyInActionData(key)){
+            const classes = this.getClassesByKey('elementList')[0];
+            let domElement = this.elements.wrapper.querySelector(`.${classes}[data-key="${key}"]`);
+            if (domElement !== null){
+                this._setElemListHover(domElement, withScroll, key);
             }
         }
     }
 
-    setElemListActiveByDirection(down = true){
-        this.setElemListActiveByNumb(
-            this.getSelectedNumb() + (down ? 1 : -1)
-        );
+    setElemListHoverByDirection(down = true){
+
+        let arrKeys = Object.keys(this.getDataForList(true));
+        let hoveredKey = this._getHoveredKey();
+        let index = arrKeys.indexOf(hoveredKey);
+
+        if (down){
+            if (hoveredKey === -1){
+                this.setElemListHoverByKey(arrKeys[0]);
+                return;
+            }
+            if (arrKeys[arrKeys.length - 1] === hoveredKey){
+                this.setElemListHoverByKey(hoveredKey);
+                return;
+            }
+            this.setElemListHoverByKey(arrKeys[index+1]);
+            return;
+        }
+        if (index === 0){
+            this._unHoveredElements();
+            this._setHoveredKey('clear');
+            return;
+        }
+        this.setElemListHoverByKey(arrKeys[index-1]);
     }
 
-    unSelectedElements(){
-        this.setSelectedNumb();
-        const classes = InputWithSearchWindow.getClassesBaseByKey('elementListSelected')[0];
+    _unHoveredElements(){
+        const classes = InputWithSearchWindow.getClassesBaseByKey('elementListHovered')[0];
         this.elements.wrapper.querySelectorAll(`.${classes}`).forEach((element) => {
             element.classList.remove(classes);
         });
     }
 
-    setElemListActive(domListElement, withScroll = false, numbElement = false){
-        const numb = typeof numbElement === 'number' ? numbElement : parseInt(domListElement.getAttribute('data-numb'));
-        const classes = InputWithSearchWindow.getClassesBaseByKey('elementListSelected')[0];
+    _setElemListHover(domListElement, withScroll = false, keyElement = false){
 
-        if (numb !== this.selectedNumb){
+        const key = typeof keyElement === 'string' ? keyElement : domListElement.getAttribute('data-key');
+        const classes = InputWithSearchWindow.getClassesBaseByKey('elementListHovered')[0];
 
-            this.unSelectedElements();
-            this.setSelectedNumb(numb);
+        if (key !== this._getHoveredKey()){
+
+            this._unHoveredElements();
+            this._setHoveredKey(key);
 
             if (withScroll){
                 this.elements.wrapperInner.scrollTop = domListElement.offsetTop;
             }
-
-            domListElement.classList.add(classes);
         }
+
+        domListElement.classList.add(classes);
+    }
+
+    setElemListActiveByKey(key, updateOnlyDom = false, withScroll = true){
+
+        if (key !== 'null' && (key !== this._getActiveKey() || updateOnlyDom)){
+
+            const classes = InputWithSearchWindow.getClassesBaseByKey('elementListSelected')[0];
+
+            if (!updateOnlyDom){
+                this._unActiveElements();
+                this._setActiveKey(key);
+            }
+
+            let domElement = this._getDomElementByKey(key);
+
+            if (withScroll){
+                this.elements.wrapperInner.scrollTop = domElement.offsetTop;
+            }
+
+            domElement.classList.add(classes);
+        }
+    }
+
+    static _getKeyAttrFromDomElement(domElement){
+        return domElement.getAttribute('data-key');
+    }
+
+    _getDomElementByKey(key){
+        return this.elements.wrapper.querySelector(`[data-key="${key}"]`);
+    }
+
+    _unActiveElements(){
+        const classes = InputWithSearchWindow.getClassesBaseByKey('elementListSelected')[0];
+        this.elements.wrapper.querySelectorAll(`.${classes}`).forEach((element) => {
+            element.classList.remove(classes);
+        });
     }
 
     setBlockHoverSelected(set = false){
@@ -320,7 +384,7 @@ class InputWithSearchWindow{
 
     reSetPosition(){
 
-        let elem_character = this.dependElement.getBoundingClientRect(),
+        let elem_character = this.getRelativeObject().getWorkDomElement().getBoundingClientRect(),
             scroll = window.pageYOffset || document.documentElement.scrollTop,
             style = this.elements.wrapper.style;
 
@@ -371,6 +435,7 @@ class InputWithSearchWindow{
             wrapperTriangle: ['InputWithSearchWindow-Triangle'],
             elementList: ['InputWithSearchWindow-Element'],
             elementListSelected: ['InputWithSearchWindow-Element_selected'],
+            elementListHovered: ['InputWithSearchWindow-Element_hovered'],
             message: ['InputWithSearchWindow-Message'],
             error: ['InputWithSearchWindow-Error']
         };
@@ -392,7 +457,7 @@ class InputWithSearchWindow{
         return {
             classes: this.classesBase,
             constructors: {
-                element: (data, value, fn) => fn(`${data} c данными ${value}`),
+                element: (data, value, fn) => fn(`Данные ${data} cо значением ${value}`),
                 error: errorText => errorText,
                 lessSymbols: (value, needSymbolsLength) => `Введите ${needSymbolsLength} или более символов.`,
                 notFind: (value) => `По запросу ${value} ничего не было найдено!.`
@@ -400,9 +465,7 @@ class InputWithSearchWindow{
             callbacks: this.listCallbacksAndEvents,
             cssParams: this.defaultCssParams,
             triangle: false,
-            relativeDomElement: false,
-            baseEventsActive: this.baseEventsActive,
-            maxViewElements: 50
+            baseEventsActive: this.baseEventsActive
         };
     }
 
@@ -422,48 +485,49 @@ class InputWithSearchWindow{
         };
     }
 
-    addDataListSave(data){
-        this.dataList = data;
-        this.dataListHaveData = true;
+    setStatus(withData = false){
+        this.haveData = withData;
     }
 
-    checkDataSave(){
-        return this.dataListHaveData;
+    checkStatus(){
+        return this.haveData;
     }
 
-    getDataFromSave(){
-        return this.dataList;
+    /**
+     *
+     * @returns {ContainerData}
+     * @private
+     */
+    _getList(){
+        return this.getRelativeObject().savesData;
     }
 
-    clearDataListSave(){
-        this.dataList = [];
-        this.dataListHaveData = false;
+    getDataForList(keys = false){
+        return this._getList().getData(false, keys === true ? 'keyId' : null);
     }
 
-    setSelectedNumb(numb = -1){
-        this.selectedNumb = numb;
+    _setHoveredKey(key){
+        this._getList().hoveredKey = key;
     }
 
-    getSelectedNumb(){
-        return this.selectedNumb;
+    _getHoveredKey(){
+        return this._getList().hoveredKey;
     }
 
-    addListElements(dataList, value){
+    _setActiveKey(key){
+        this._getList().activeKey = key;
+    }
 
-        const filterData = (arr, maxLength) => {
-            return arr.length > maxLength
-                ? arr.slice(0, maxLength)
-                : arr;
-        };
+    _getActiveKey(){
+        return this._getList().activeKey;
+    }
+
+    addListElements(dataList, value, reposition = true){
 
         this.addInfoToList('');
-        this.addDataListSave(dataList);
+        this.setStatus(true);
 
-        let viewElements = this.settings.maxViewElements < dataList.length
-            ? this.settings.maxViewElements
-            : dataList.length;
-
-        filterData(dataList, viewElements)
+        dataList
             .forEach((dataElement, numb) => {
                 this.addInfoToList(
                     InputWithSearchWindow.constructElement(
@@ -476,10 +540,27 @@ class InputWithSearchWindow{
                     true
                 );
             });
+
+        const activeKey = this._getActiveKey();
+        const checkActiveKey = activeKey !== 'null';
+
+        if (reposition){
+            this.setElemListActiveByKey(activeKey, true, false);
+        } else {
+            if (checkActiveKey){
+                this.setElemListActiveByKey(activeKey, true, true);
+                this.setElemListHoverByKey(activeKey, true);
+            } else {
+                const hoveredKey = this._getHoveredKey();
+                if (hoveredKey !== 'null'){
+                    this.setElemListHoverByKey(hoveredKey, reposition);
+                }
+            }
+        }
     }
 
     setToMessage(typeMessage, params){
-        this.clearDataListSave();
+        this.setStatus();
         this.addInfoToList(
             InputWithSearchWindow.constructMessage(
                 typeMessage,
@@ -491,7 +572,7 @@ class InputWithSearchWindow{
     }
 
     setToError(...args){
-        this.clearDataListSave();
+        this.setStatus();
         this.addInfoToList(
             InputWithSearchWindow.constructMessageError(
                 ...args,
@@ -502,7 +583,7 @@ class InputWithSearchWindow{
     }
 
     setToWait(){
-        this.clearDataListSave();
+        this.setStatus();
         this.addInfoToList(
             InputWithSearchWindow.constructWaitThrobber()
         );
@@ -510,8 +591,8 @@ class InputWithSearchWindow{
 
     static constructElement(data, value, numb, fn, classes){
         return `
-                <div class="${classes}" data-numb="${numb}">
-                    ${fn(data, value, funcs.highlightMatchesToString)}
+                <div class="${classes}" data-key="${data.key}" data-numb="${numb}">
+                    ${fn(data.data, value, funcs.highlightMatchesToString)}
                 </div>
             `;
     }

@@ -3,15 +3,16 @@ import InputWithSearchForWindow from './InputWithSearchForWindow';
 import funcs from '../functions/functions';
 import EventSave from './EventSave';
 import weakMapIWS from '../functions/weakMapIWS';
+import ContainerData from './ContainerData';
+import {readOnly} from '../functions/decorators';
 
 class InputWithSearch{
 
     constructor(domElement, settings = {}){
 
-        this.domElement = domElement;
+        this._domElement = domElement;
         this.settings = InputWithSearch.settings;
         this.updateSettings(settings);
-        this.clearCustomData();
         this.createCustomContainer();
 
         this.fireEventAndCallback('inputWithSearch_beforeInit');
@@ -19,18 +20,44 @@ class InputWithSearch{
         this.waitData = false;
         this.xhr = false;
         this.promiseXhr = false;
-        this.savesData(null, this.getValueFromInput());
+
+        this.savesData = new ContainerData(this.id, {
+            active: (key) => {
+                this.fireEventAndCallback('inputWithSearch_changeActive', {key});
+            },
+            hover: (key) => {
+                this.fireEventAndCallback('inputWithSearch_changeHover', {key});
+            }
+        });
+        this.savesData.addData([], this.getValueFromInput());
+
         this.changeStatus([0]);
-        this.domElement.classList.add(...this.getClassesByKey('input'));
+        this.getWorkDomElement().classList.add(...this.getClassesByKey('input'));
 
         this.addEventListeners();
 
-        this.lastData = false;
         this.wasFirstLoad = false;
 
-        InputWithSearch.addAttrToDomInput(this.domElement);
+        InputWithSearch.addAttrToDomInput(this.getWorkDomElement());
 
         this.fireEventAndCallback('inputWithSearch_afterInit');
+    }
+
+    getWorkDomElement(useInitDomImportant = false){
+        return useInitDomImportant || !checkDomElement(this.settings.delegateElement)
+            ? this._domElement
+            : this.settings.delegateElement;
+    }
+
+    @readOnly
+    id = 'IWS-' + InputWithSearch._counter();
+
+    static _counter(){
+        if (typeof this.counter === 'undefined'){
+            this.counter = -1;
+        }
+        this.counter += 1;
+        return this.counter;
     }
 
     /**
@@ -44,13 +71,13 @@ class InputWithSearch{
     addEventListeners(){
 
         let listeners = this.getListeners();
-        let domElement = this.domElement;
+        let domElement = this.getWorkDomElement();
 
         if (typeof listeners !== 'undefined' && listeners instanceof EventSave){
             listeners.removeAllRecords();
         }
 
-        listeners = new EventSave(this.domElement);
+        listeners = new EventSave(this.getWorkDomElement(true));
 
         let onEvents = this.settings.onEvents;
 
@@ -162,33 +189,28 @@ class InputWithSearch{
         input.autocomplete = 'off';
     }
 
-    savesData(data, value){
-        this.saveData = {
-            data,
-            date: Date.now(),
-            value
-        };
-    }
-
-    getSaveData(){
-        return this.saveData;
-    }
-
     getValueFromInput(){
-        return this.domElement.value;
+        let HTMLElement = this.getWorkDomElement();
+        if (typeof this.settings.fns.fnGetValueFromInput === 'function'){
+            return this.settings.fns.fnGetValueFromInput.call(null, HTMLElement);
+        }
+        if (checkDomOnInput(HTMLElement)){
+            return HTMLElement.value;
+        }
+        return HTMLElement.textContent;
     }
 
     setValueToInput(value){
+        let HTMLElement = this.getWorkDomElement();
         if (typeof this.settings.fns.fnSetValueToInput === 'function'){
-            this.settings.fns.fnSetValueToInput.call(null, this.domElement, value);
+            this.settings.fns.fnSetValueToInput.call(null, HTMLElement, value);
             return;
         }
-        if (checkDomOnInput(this.domElement)){
-            this.domElement.value = value;
+        if (checkDomOnInput(HTMLElement)){
+            HTMLElement.value = value;
             return;
         }
-        this.domElement.innerHTML = value;
-
+        HTMLElement.textContent = value;
     }
 
     updateSettings(newSettings){
@@ -227,30 +249,23 @@ class InputWithSearch{
         return this.status.has(idStatus);
     }
 
-    static validateSaveDataForRequest(saveData, stringRequest, timeLiveSaveData){
-
-        const toLower = value => value.toLowerCase();
-
-        if (saveData.value === '' || toLower(stringRequest).indexOf(toLower(saveData.value)) === -1){
-            return false;
-        }
-        return Date.now() - saveData.date < timeLiveSaveData;
-    }
-
     fnOnEventFire(value = false){
 
         this.changeStatus([], [2, 3]);
 
-        let domElementIsInput = checkDomOnInput(this.domElement);
+        let HTMLElement = this.getWorkDomElement();
+        let domElementIsInput = checkDomOnInput(HTMLElement);
 
         if (value === false){
-            value = this.domElement.value;
+            value = HTMLElement.value;
         }
 
         if (domElementIsInput === false || value.length >= this.settings.lengthStringToOutput){
 
-            if (this.checkCustomData()){
-                this.constructList(this.getCustomData(), this.getValueFromInput());
+            let savesData = this.savesData;
+
+            if (savesData.checkCustomData()){
+                this.constructList();
             } else {
                 let needLoad = true;
 
@@ -258,8 +273,7 @@ class InputWithSearch{
                     needLoad = !this.wasFirstLoad;
                 } else {
 
-                    let validCache = InputWithSearch.validateSaveDataForRequest(
-                        this.getSaveData(),
+                    let validCache = savesData.validateSaveDataForRequest(
                         value,
                         this.settings.timeLiveSaveData
                     );
@@ -270,7 +284,7 @@ class InputWithSearch{
                 if (needLoad){
                     this.loadData();
                 } else {
-                    this.constructList(this.saveData.data, this.getValueFromInput());
+                    this.constructList();
                 }
             }
         } else {
@@ -289,27 +303,16 @@ class InputWithSearch{
         }
     }
 
-    constructList(data, value){
+    constructList(){
 
-        if (typeof this.settings.fns.filterData === 'function'){
-            data = data.filter((elemData) => {
-                return this.settings.fns.filterData(elemData, value);
-            });
+        this._allFilterAndSortProcess();
 
-        }
-
-        this.lastData = data;
+        let data = this.savesData.getData(false);
 
         if (data.length){
 
-            if (typeof this.settings.numberOfResultsForView === 'number'){
-                data = data.slice(0, this.settings.numberOfResultsForView + 1);
-            }
-
             this.fireEventAndCallback('inputWithSearch_beforeListAddDom');
-
-            this.inputWithSearchWindow.addListElements(data);
-
+            this.inputWithSearchWindow.addListElements(data, this.getValueFromInput(), this.settings.repositionActiveToTop);
             this.fireEventAndCallback('inputWithSearch_afterListAddDom');
 
             return;
@@ -318,26 +321,43 @@ class InputWithSearch{
         this.setToMessage('notFind');
     }
 
-    static getValidateData(data){
-        if (Array.isArray(data)){
-            return data;
-        } else {
-            if (data instanceof Object){
-                return Object.values(data);
-            } else {
-                throw new Error('Полученные данные не являются JSON-массивом.');
-            }
+    _allFilterAndSortProcess(){
+
+        const sliceData = (arr, maxLength) => {
+            return arr.length > maxLength
+                ? arr.slice(0, maxLength)
+                : arr;
+        };
+
+        let savesData = this.savesData;
+        let data = savesData.getData();
+        let value = this.getValueFromInput();
+
+        if (this.settings.maxViewElements < data.length){
+            data = sliceData(data, this.settings.maxViewElements);
         }
+
+        if (typeof this.settings.fns.filterData === 'function'){
+            data = data.filter((elemData) => {
+                return this.settings.fns.filterData(elemData, value);
+            });
+        }
+
+        if (this.settings.repositionActiveToTop === true){
+            data = ContainerData.repositionActiveToTop(data);
+        }
+
+        savesData.saveActionData(data);
+
+        this.fireEventAndCallback('inputWithSearch_onUpdateDataView');
     }
 
     onLoadData(data, value){
 
         const dataSort = JSON.parse(data);
 
-        let dataWorking = InputWithSearch.getValidateData(dataSort);
-
-        this.savesData(dataWorking, value);
-        this.constructList(dataWorking, this.getValueFromInput());
+        this.savesData.addData(dataSort, value);
+        this.constructList();
         if (this.wasFirstLoad === false){
             this.wasFirstLoad = true;
         }
@@ -423,6 +443,7 @@ class InputWithSearch{
             checkOpen = this.checkStatus(1);
 
         if (!checkOpen){
+            let HTMLElement = this.getWorkDomElement();
             this.fireEventAndCallback('inputWithSearch_beforeOpen');
             if (checkWindow){
                 window.inputWithSearchWindow.destructor();
@@ -430,15 +451,14 @@ class InputWithSearch{
             window.inputWithSearchWindow =
                 this.inputWithSearchWindow =
                     new InputWithSearchWindow(
-                        this.domElement,
+                        this.getWorkDomElement(true),
                         this.configForInitSearchWindow
                     );
-            InputWithSearch.setInputActive(this.domElement, true);
+            InputWithSearch.setInputActive(HTMLElement, true);
             this.changeStatus([1], [0]);
-
-            this.fireEventAndCallback('inputWithSearch_afterOpen');
         }
         this.fnOnEventFire();
+        this.fireEventAndCallback('inputWithSearch_afterOpen');
     }
 
     get configForInitSearchWindow(){
@@ -469,8 +489,8 @@ class InputWithSearch{
                     this.close(true, false);
                 },
                 inputWithSearchWindow_clickOnElementList: (objectWindow, domElement) => {
-                    const numb = parseInt(domElement.getAttribute('data-numb'));
-                    let configForEvent = this.setActiveByNumbFromList(numb);
+                    const key = domElement.getAttribute('data-key');
+                    let configForEvent = this._setActiveByKeyFromList(key);
                     this.fireEventAndCallback('inputWithSearch_onClickOption', configForEvent);
                     this.close();
                 },
@@ -482,15 +502,13 @@ class InputWithSearch{
             constructors: getNeedConstructors(this.settings.constructors),
             cssParams: this.settings.cssParamsWindow,
             triangle: this.settings.triangle,
-            relativeDomElement: this.domElement,
-            baseEventsActive: this.settings.baseWindowEventsActive,
-            maxViewElements: this.settings.maxViewElements
+            baseEventsActive: this.settings.baseWindowEventsActive
         };
     }
 
-    setActiveByNumbFromList(numb){
+    _setActiveByKeyFromList(key){
 
-        const data = this.getDataFromLastDataByNumb(numb);
+        const data = this.getDataFromLastDataByKey(key);
         const inputValue = this.getValueFromInput();
 
         this.setValueToInput(
@@ -506,8 +524,8 @@ class InputWithSearch{
         };
     }
 
-    getDataFromLastDataByNumb(numb){
-        return this.lastData[numb];
+    getDataFromLastDataByKey(key){
+        return this.savesData.getData(false, 'keyId')[key];
     }
 
     close(runEvents = true, runDestructor = true){
@@ -519,7 +537,7 @@ class InputWithSearch{
             } finally {
                 window.inputWithSearchWindow = null;
             }
-            InputWithSearch.setInputActive(this.domElement, false);
+            InputWithSearch.setInputActive(this.getWorkDomElement(), false);
             if (runEvents) this.fireEventAndCallback('inputWithSearch_afterClose');
         }
     }
@@ -533,7 +551,7 @@ class InputWithSearch{
     fireEventAndCallback(name, data = {}){
         if (name in InputWithSearch.getListCallbacksAndEvents()){
 
-            let caller = this.domElement;
+            let caller = this.getWorkDomElement(true);
             let inputWithSearch = {
                 object: this,
                 ...data
@@ -581,11 +599,13 @@ class InputWithSearch{
     /* end sets to */
 
     destructor(){
+        this.fireEventAndCallback('inputWithSearch_beforeDestruction');
+        let HTMLElement = this.getWorkDomElement();
         this.close();
         this.removeEventListeners();
-        InputWithSearch.setInputActive(this.domElement, false);
-        this.domElement.classList.remove(...this.getClassesByKey('input'));
-        weakMapIWS.getDataWeakMapIWS(InputWithSearchForWindow.getInstance()).list.removeElement(this.domElement);
+        InputWithSearch.setInputActive(HTMLElement, false);
+        HTMLElement.classList.remove(...this.getClassesByKey('input'));
+        weakMapIWS.getDataWeakMapIWS(InputWithSearchForWindow.getInstance()).list.removeElement(HTMLElement);
     }
 
     static setInputActive(input, flag){
@@ -641,19 +661,7 @@ class InputWithSearch{
     /* for not downloaded data */
 
     setCustomData(data){
-        this.customData = InputWithSearch.getValidateData(data);
-    }
-
-    clearCustomData(){
-        this.customData = null;
-    }
-
-    getCustomData(){
-        return this.customData;
-    }
-
-    checkCustomData(){
-        return this.customData !== null;
+        this.savesData.addData(data, this.getValueFromInput(), true);
     }
 
     /* end for not downloaded data */
@@ -687,7 +695,10 @@ class InputWithSearch{
             'inputWithSearch_beforeClose': false,
             'inputWithSearch_afterClose': false,
             'inputWithSearch_onError': false,
-            'inputWithSearch_onChangeWindow': false
+            'inputWithSearch_onChangeWindow': false,
+            'inputWithSearch_onUpdateDataView': false,
+            'inputWithSearch_changeActive': false,
+            'inputWithSearch_changeHover': false
         };
     }
 
@@ -715,9 +726,10 @@ class InputWithSearch{
                  * @return String
                  */
                 dataToInputByClick: (data) => {
-                    return data;
+                    return data.data;
                 },
                 fnSetValueToInput: false,
+                fnGetValueFromInput: false,
                 filterData: false,
                 generateGetParams: false
             },
@@ -725,16 +737,19 @@ class InputWithSearch{
             loadOnlyStart: false,
             maxViewElements: 50,
             lengthStringToOutput: 4,
-            numberOfResultsForView: false,
             timeLiveSaveData: 60*60*1000,
             classes: this.htmlElementsClasses,
             data: false,
             cssParamsWindow: InputWithSearchWindow.defaultCssParams,
             triangle: false,
-            baseWindowEventsActive: {}
+            baseWindowEventsActive: {},
+            delegateElement: false,
+            repositionActiveToTop: true
         };
     }
 }
+
+const checkDomElement = element => element instanceof HTMLElement;
 
 const checkDomOnInput = (domElement) => {
     return domElement.tagName === 'INPUT';

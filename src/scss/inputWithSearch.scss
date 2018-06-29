@@ -44,6 +44,9 @@ body{
     &_selected{
       background: rgba(#000, .3);
     }
+    &_hovered{
+      background: rgba(#e60, .3);
+    }
   }
   &-LessSymbols, &-Error{
     padding: 20px 16px;

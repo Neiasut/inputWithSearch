@@ -2,8 +2,8 @@ const InputWithSearchForWindowWeakMap = new WeakMap();
 
 /**
  * @typedef {object} protectedFieldsIWS
- * @property {ListInputWithSearch} list - The name of the employee.
- * @property {Map} themes - The employee's department.
+ * @property {ListInputWithSearch} list
+ * @property {Map} themes
  */
 
 /**

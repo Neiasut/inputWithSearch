@@ -92,13 +92,18 @@ const mergeListArraysWithoutDuplicates = (oldArr, newArr) => {
     }, {});
 };
 
+const insertAfter = (newNode, referenceNode) => {
+    referenceNode.parentNode.insertBefore(newNode, referenceNode.nextSibling);
+};
+
 const funcs = {
     delegateFn,
     extend,
     callEvent,
     hasClass,
     highlightMatchesToString,
-    mergeListArraysWithoutDuplicates
+    mergeListArraysWithoutDuplicates,
+    insertAfter
 };
 
 export default funcs;

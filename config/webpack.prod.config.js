@@ -7,9 +7,11 @@ module.exports = () => {
 
     return {
         //target: 'web',
-        entry: path.resolve(__dirname, '../src/js/entry.js'),
+        entry: {
+            inputWithSearch: path.resolve(__dirname, '../src/js/inputWithSearch.js')
+        },
         output: {
-            filename: 'inputWithSearch.min.js',
+            filename: '[name].min.js',
             path: path.resolve(__dirname, '../dist/js/')
         },
         devtool: 'source-map',

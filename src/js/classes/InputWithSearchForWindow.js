@@ -85,6 +85,12 @@ class InputWithSearchForWindow{
             if (!list.hasElement(element)){
                 let availableThemeConfigs = Object.values(getListAvailableThemeConfig());
                 for (let objectTheme of availableThemeConfigs){
+                    let fn = objectTheme.fnRunBeforeStart;
+                    if (typeof fn === 'function'){
+                        fn.call(null, element);
+                    }
+                }
+                for (let objectTheme of availableThemeConfigs){
                     let objectData = objectTheme.objectData;
                     if (Object.keys(objectData).length){
                         objectConfig = funcs.extend(true, {}, objectData, objectConfig);
@@ -111,13 +117,17 @@ class InputWithSearchForWindow{
      * @param {string} name
      * @param {object} objectData
      * @param {function(InputWithSearch)} fnRunOnStart
+     * @param {function(HTMLElement)} fnRunBeforeStart
      */
-    addTheme(name, objectData, fnRunOnStart){
+    addTheme(name, objectData, fnRunOnStart, fnRunBeforeStart){
+
         let themes = weakMapIWS.getDataWeakMapIWS(this).themes;
+
         if (!themes.has(name)){
             themes.set(name, {
                 objectData,
-                fnRunOnStart
+                fnRunOnStart,
+                fnRunBeforeStart
             });
         } else {
             throw new PropertyError(name);

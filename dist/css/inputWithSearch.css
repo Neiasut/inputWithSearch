@@ -31,6 +31,8 @@ body {
       border-bottom: none; }
     .InputWithSearchWindow-Element_selected {
       background: rgba(0, 0, 0, 0.3); }
+    .InputWithSearchWindow-Element_hovered {
+      background: rgba(238, 102, 0, 0.3); }
   .InputWithSearchWindow-LessSymbols, .InputWithSearchWindow-Error {
     padding: 20px 16px; }
   .InputWithSearchWindow-Coincidence {
