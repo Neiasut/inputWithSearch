@@ -747,6 +747,29 @@ class InputWithSearch{
             repositionActiveToTop: true
         };
     }
+
+    /**
+     * Set active data by first element function fire
+     * @param {function(object):boolean} cb
+     */
+    setActive(cb){
+        let changeKey = 'null';
+        this.savesData.getData(false).some(data => {
+            let result = cb(data.data);
+            if (result){
+                changeKey = data.key;
+            }
+            return result;
+        });
+        if (changeKey !== 'null'){
+            this.savesData.activeKey = changeKey;
+            this._setActiveByKeyFromList(changeKey);
+            if (this.checkStatus(1)){
+                this.inputWithSearchWindow.setElemListActiveByKey(changeKey, true);
+                this.inputWithSearchWindow.setElemListHoverByKey(changeKey, false);
+            }
+        }
+    }
 }
 
 const checkDomElement = element => element instanceof HTMLElement;

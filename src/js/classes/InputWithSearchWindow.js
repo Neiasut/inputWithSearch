@@ -320,8 +320,8 @@ class InputWithSearchWindow{
 
             const classes = InputWithSearchWindow.getClassesBaseByKey('elementListSelected')[0];
 
+            this._unActiveElements();
             if (!updateOnlyDom){
-                this._unActiveElements();
                 this._setActiveKey(key);
             }
 

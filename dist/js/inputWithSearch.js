@@ -1333,6 +1333,32 @@ var InputWithSearch = (_class = function () {
         /* end custom container */
 
     }, {
+        key: 'setActive',
+
+
+        /**
+         * Set active data by first element function fire
+         * @param {function(object):boolean} cb
+         */
+        value: function setActive(cb) {
+            var changeKey = 'null';
+            this.savesData.getData(false).some(function (data) {
+                var result = cb(data.data);
+                if (result) {
+                    changeKey = data.key;
+                }
+                return result;
+            });
+            if (changeKey !== 'null') {
+                this.savesData.activeKey = changeKey;
+                this._setActiveByKeyFromList(changeKey);
+                if (this.checkStatus(1)) {
+                    this.inputWithSearchWindow.setElemListActiveByKey(changeKey, true);
+                    this.inputWithSearchWindow.setElemListHoverByKey(changeKey, false);
+                }
+            }
+        }
+    }, {
         key: 'configForInitSearchWindow',
         get: function get() {
             var _this7 = this;
@@ -2236,8 +2262,8 @@ var InputWithSearchWindow = function () {
 
                 var classes = InputWithSearchWindow.getClassesBaseByKey('elementListSelected')[0];
 
+                this._unActiveElements();
                 if (!updateOnlyDom) {
-                    this._unActiveElements();
                     this._setActiveKey(key);
                 }
 
