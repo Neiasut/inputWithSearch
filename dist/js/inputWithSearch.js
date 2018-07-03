@@ -186,6 +186,22 @@ var ContainerData = function () {
         }
 
         /**
+         * Get data
+         * @param {string} key
+         * @param {boolean} full
+         * @return {Object|undefined}
+         */
+
+    }, {
+        key: 'getDataByKey',
+        value: function getDataByKey(key) {
+            var full = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : false;
+
+            var data = this.getData(false, 'keyId')[key];
+            return typeof data !== 'undefined' ? full ? data : data['data'] : undefined;
+        }
+
+        /**
          * Getter key hover
          * @returns {string}
          */
@@ -1357,6 +1373,26 @@ var InputWithSearch = (_class = function () {
                     this.inputWithSearchWindow.setElemListHoverByKey(changeKey, false);
                 }
             }
+        }
+
+        /**
+         *
+         * @param key
+         * @param full
+         * @return {Object}
+         */
+
+    }, {
+        key: 'getDataByKey',
+        value: function getDataByKey(key) {
+            var full = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : false;
+
+            return this.savesData.getDataByKey(key, full);
+        }
+    }, {
+        key: 'getActiveKey',
+        value: function getActiveKey() {
+            return this.savesData.activeKey;
         }
     }, {
         key: 'configForInitSearchWindow',

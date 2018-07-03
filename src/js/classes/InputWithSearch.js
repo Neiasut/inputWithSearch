@@ -770,6 +770,20 @@ class InputWithSearch{
             }
         }
     }
+
+    /**
+     *
+     * @param key
+     * @param full
+     * @return {Object}
+     */
+    getDataByKey(key, full = false){
+        return this.savesData.getDataByKey(key, full);
+    }
+
+    getActiveKey(){
+        return this.savesData.activeKey;
+    }
 }
 
 const checkDomElement = element => element instanceof HTMLElement;

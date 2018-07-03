@@ -66,6 +66,21 @@ class ContainerData{
     }
 
     /**
+     * Get data
+     * @param {string} key
+     * @param {boolean} full
+     * @return {Object|undefined}
+     */
+    getDataByKey(key, full = false){
+        let data = this.getData(false, 'keyId')[key];
+        return typeof data !== 'undefined'
+            ? full
+                ? data
+                : data['data']
+            : undefined;
+    }
+
+    /**
      * Getter key hover
      * @returns {string}
      */
