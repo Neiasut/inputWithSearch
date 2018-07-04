@@ -112,18 +112,16 @@ var ContainerData = function () {
      * constructor
      * @param {string} idParent
      * @param {object} callbacks
-     * @param {function(key)|undefined} callbacks.active
-     * @param {function(key)|undefined} callbacks.hover
      */
     function ContainerData(idParent, callbacks) {
         _classCallCheck(this, ContainerData);
 
         this._idParent = idParent;
         /**
-         * @type {{active: (function(key))|undefined, hover: (function(key))|undefined}}
-         * @private
+         * @typedef {Map.<string, {cb: function|boolean, activity: boolean}>} _callbacks
+         * @type _callbacks
          */
-        this._callbacks = callbacks;
+        this._callbacks = ContainerData._prepareObjectCallbacks(callbacks);
         this.clear();
     }
 
@@ -146,7 +144,6 @@ var ContainerData = function () {
             this._date = Date.now();
             this._actionData = this._data.slice(0);
             this.activeKey = 'clear';
-            this.hoveredKey = 'clear';
         }
     }, {
         key: 'saveActionData',
@@ -211,13 +208,13 @@ var ContainerData = function () {
         value: function _setAction(key, nameAction) {
             if (key === 'clear') {
                 clearAction(nameAction, this._actionData);
-                this.runCbOnName(nameAction, key);
+                this._runCbOnName(nameAction, key);
                 return;
             }
             if (this.checkKeyInActionData(key)) {
                 clearAction(nameAction, this._actionData);
                 this.getData(false, 'keyId')[key][nameAction] = true;
-                this.runCbOnName(nameAction, key);
+                this._runCbOnName(nameAction, key);
             }
         }
     }, {
@@ -239,13 +236,58 @@ var ContainerData = function () {
 
             return Date.now() - this._date < timeLiveSaveData;
         }
+
+        /**
+         * Get available name fields
+         * @return {string[]}
+         */
+
     }, {
-        key: 'runCbOnName',
-        value: function runCbOnName(name, key) {
-            if (ContainerData.nameCb.indexOf(name) !== -1) {
-                var cb = this._callbacks[name];
+        key: '_runCbOnName',
+        value: function _runCbOnName(name, key) {
+            if (this._checkActivityCallback(name)) {
+                var cb = this._callbacks.get(name)['cb'];
                 cb(key);
             }
+        }
+
+        /**
+         * Disable runs callbacks with name
+         * @param {string} name
+         */
+
+    }, {
+        key: 'setInactivityCallback',
+        value: function setInactivityCallback(name) {
+            if (ContainerData.checkNameInAvailableCbs(name)) {
+                this._callbacks.get(name)['activity'] = false;
+            }
+        }
+
+        /**
+         * Able runs callbacks with name
+         * @param {string} name
+         */
+
+    }, {
+        key: 'setActivityCallback',
+        value: function setActivityCallback(name) {
+            if (ContainerData.checkNameInAvailableCbs(name)) {
+                this._callbacks.get(name)['activity'] = true;
+            }
+        }
+
+        /**
+         * Check activity run callback with name
+         * @param name
+         * @return {boolean}
+         * @private
+         */
+
+    }, {
+        key: '_checkActivityCallback',
+        value: function _checkActivityCallback(name) {
+            return this._callbacks.get(name)['activity'];
         }
     }, {
         key: 'hoveredKey',
@@ -329,7 +371,41 @@ var ContainerData = function () {
             return arrWork;
         }
     }, {
-        key: 'nameCb',
+        key: 'checkNameInAvailableCbs',
+
+
+        /**
+         * Check name on available callbacks
+         * @param name
+         * @return {boolean}
+         */
+        value: function checkNameInAvailableCbs(name) {
+            return this.nameCbs.indexOf(name) !== -1;
+        }
+
+        /**
+         * Start prepare objectCallbacks
+         * @param {Object.<string, function>} objectCallbacks
+         * @private
+         * @return {_callbacks}
+         */
+
+    }, {
+        key: '_prepareObjectCallbacks',
+        value: function _prepareObjectCallbacks(objectCallbacks) {
+            return this.nameCbs.reduce(function (acc, current) {
+                if (typeof objectCallbacks[current] !== 'undefined') {
+                    var cb = typeof objectCallbacks[current] === 'function' ? objectCallbacks[current] : false;
+                    acc.set(current, {
+                        cb: cb,
+                        activity: true
+                    });
+                }
+                return acc;
+            }, new Map());
+        }
+    }, {
+        key: 'nameCbs',
         get: function get() {
             return ['active', 'hover'];
         }
@@ -1355,10 +1431,14 @@ var InputWithSearch = (_class = function () {
         /**
          * Set active data by first element function fire
          * @param {function(object):boolean} cb
+         * @param {boolean} withRunEvent
          */
         value: function setActive(cb) {
+            var withRunEvent = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : true;
+
             var changeKey = 'null';
-            this.savesData.getData(false).some(function (data) {
+            var savesData = this.savesData;
+            savesData.getData(false).some(function (data) {
                 var result = cb(data.data);
                 if (result) {
                     changeKey = data.key;
@@ -1366,11 +1446,17 @@ var InputWithSearch = (_class = function () {
                 return result;
             });
             if (changeKey !== 'null') {
-                this.savesData.activeKey = changeKey;
+                if (withRunEvent === false) {
+                    savesData.setInactivityCallback('active');
+                }
+                savesData.activeKey = changeKey;
                 this._setActiveByKeyFromList(changeKey);
                 if (this.checkStatus(1)) {
                     this.inputWithSearchWindow.setElemListActiveByKey(changeKey, true);
                     this.inputWithSearchWindow.setElemListHoverByKey(changeKey, false);
+                }
+                if (withRunEvent === false) {
+                    savesData.setActivityCallback('active');
                 }
             }
         }

@@ -190,7 +190,19 @@
             ]
         );
 
-        inputWithSearch.getElement('test7', {}, ['select']);
+        inputWithSearch.getElement('test7', {
+            /*
+            callbacks: {
+                'inputWithSearch_changeActive': (...args) => {
+                    console.log('change active', args);
+                }
+            }
+            */
+        }, ['select']);
+
+        inputWithSearch.getElement('test7')._domElement.addEventListener('inputWithSearch_changeActive', (e) => {
+            console.log(e.detail.inputWithSearch.key);
+        });
 
     </script>
 </body>

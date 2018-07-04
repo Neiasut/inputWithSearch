@@ -751,10 +751,12 @@ class InputWithSearch{
     /**
      * Set active data by first element function fire
      * @param {function(object):boolean} cb
+     * @param {boolean} withRunEvent
      */
-    setActive(cb){
+    setActive(cb, withRunEvent = true){
         let changeKey = 'null';
-        this.savesData.getData(false).some(data => {
+        let savesData = this.savesData;
+        savesData.getData(false).some(data => {
             let result = cb(data.data);
             if (result){
                 changeKey = data.key;
@@ -762,11 +764,17 @@ class InputWithSearch{
             return result;
         });
         if (changeKey !== 'null'){
-            this.savesData.activeKey = changeKey;
+            if (withRunEvent === false){
+                savesData.setInactivityCallback('active');
+            }
+            savesData.activeKey = changeKey;
             this._setActiveByKeyFromList(changeKey);
             if (this.checkStatus(1)){
                 this.inputWithSearchWindow.setElemListActiveByKey(changeKey, true);
                 this.inputWithSearchWindow.setElemListHoverByKey(changeKey, false);
+            }
+            if (withRunEvent === false){
+                savesData.setActivityCallback('active');
             }
         }
     }

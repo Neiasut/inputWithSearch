@@ -4,16 +4,14 @@ class ContainerData{
      * constructor
      * @param {string} idParent
      * @param {object} callbacks
-     * @param {function(key)|undefined} callbacks.active
-     * @param {function(key)|undefined} callbacks.hover
      */
     constructor(idParent, callbacks){
         this._idParent = idParent;
         /**
-         * @type {{active: (function(key))|undefined, hover: (function(key))|undefined}}
-         * @private
+         * @typedef {Map.<string, {cb: function|boolean, activity: boolean}>} _callbacks
+         * @type _callbacks
          */
-        this._callbacks = callbacks;
+        this._callbacks = ContainerData._prepareObjectCallbacks(callbacks);
         this.clear();
     }
 
@@ -33,7 +31,6 @@ class ContainerData{
         this._date = Date.now();
         this._actionData = this._data.slice(0);
         this.activeKey = 'clear';
-        this.hoveredKey = 'clear';
     }
 
     saveActionData(data){
@@ -115,13 +112,13 @@ class ContainerData{
     _setAction(key, nameAction){
         if (key === 'clear'){
             clearAction(nameAction, this._actionData);
-            this.runCbOnName(nameAction, key);
+            this._runCbOnName(nameAction, key);
             return;
         }
         if (this.checkKeyInActionData(key)){
             clearAction(nameAction, this._actionData);
             this.getData(false, 'keyId')[key][nameAction] = true;
-            this.runCbOnName(nameAction, key);
+            this._runCbOnName(nameAction, key);
         }
     }
 
@@ -178,15 +175,77 @@ class ContainerData{
         return Date.now() - this._date < timeLiveSaveData;
     }
 
-    static get nameCb(){
+    /**
+     * Get available name fields
+     * @return {string[]}
+     */
+    static get nameCbs(){
         return ['active', 'hover'];
     }
 
-    runCbOnName(name, key){
-        if (ContainerData.nameCb.indexOf(name) !== -1){
-            let cb = this._callbacks[name];
+    /**
+     * Check name on available callbacks
+     * @param name
+     * @return {boolean}
+     */
+    static checkNameInAvailableCbs(name){
+        return this.nameCbs.indexOf(name) !== -1;
+    }
+
+    /**
+     * Start prepare objectCallbacks
+     * @param {Object.<string, function>} objectCallbacks
+     * @private
+     * @return {_callbacks}
+     */
+    static _prepareObjectCallbacks(objectCallbacks){
+        return this.nameCbs.reduce((acc, current) => {
+            if (typeof objectCallbacks[current] !== 'undefined'){
+                let cb = typeof objectCallbacks[current] === 'function' ? objectCallbacks[current] : false;
+                acc.set(current, {
+                    cb,
+                    activity: true
+                });
+            }
+            return acc;
+        }, new Map());
+    }
+
+    _runCbOnName(name, key){
+        if (this._checkActivityCallback(name)){
+            let cb = this._callbacks.get(name)['cb'];
             cb(key);
         }
+    }
+
+    /**
+     * Disable runs callbacks with name
+     * @param {string} name
+     */
+    setInactivityCallback(name){
+        if (ContainerData.checkNameInAvailableCbs(name)){
+            this._callbacks.get(name)['activity'] = false;
+        }
+    }
+
+    /**
+     * Able runs callbacks with name
+     * @param {string} name
+     */
+    setActivityCallback(name){
+        if (ContainerData.checkNameInAvailableCbs(name)) {
+            this._callbacks.get(name)['activity'] = true;
+        }
+    }
+
+    /**
+     * Check activity run callback with name
+     * @param name
+     * @return {boolean}
+     * @private
+     */
+    _checkActivityCallback(name){
+        return this._callbacks.get(name)['activity'];
     }
 }
 
