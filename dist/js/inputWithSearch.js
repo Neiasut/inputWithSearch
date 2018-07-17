@@ -2202,7 +2202,7 @@ var InputWithSearchWindow = function () {
                 events: 'click',
                 fn: function fn(event) {
                     return _functions2.default.delegateFn(event, elemListClass, function (e, elem) {
-                        _this2.setElemListActiveByKey(InputWithSearchWindow._getKeyAttrFromDomElement(e.target));
+                        _this2.setElemListActiveByKey(InputWithSearchWindow._getKeyAttrFromDomElement(elem));
                         _this2.fireEventAndCallback('inputWithSearchWindow_clickOnElementList', elem);
                     });
                 },

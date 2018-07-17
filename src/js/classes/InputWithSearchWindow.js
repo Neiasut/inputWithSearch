@@ -152,7 +152,7 @@ class InputWithSearchWindow{
                 domElement: wrapper,
                 events: 'click',
                 fn: (event) => funcs.delegateFn(event, elemListClass, (e, elem) => {
-                    this.setElemListActiveByKey( InputWithSearchWindow._getKeyAttrFromDomElement(e.target) );
+                    this.setElemListActiveByKey( InputWithSearchWindow._getKeyAttrFromDomElement(elem) );
                     this.fireEventAndCallback('inputWithSearchWindow_clickOnElementList', elem);
                 }),
                 protectedStatus: true
