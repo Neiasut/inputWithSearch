@@ -1530,6 +1530,7 @@ var InputWithSearch = (_class = function () {
                 classes: getClassesFromSettings(this.settings.classes),
                 constructors: getNeedConstructors(this.settings.constructors),
                 cssParams: this.settings.cssParamsWindow,
+                cssCallbacks: this.settings.cssCallbacksWindow,
                 triangle: this.settings.triangle,
                 baseEventsActive: this.settings.baseWindowEventsActive
             };
@@ -1689,6 +1690,7 @@ var InputWithSearch = (_class = function () {
                 classes: this.htmlElementsClasses,
                 data: false,
                 cssParamsWindow: _InputWithSearchWindow2.default.defaultCssParams,
+                cssCallbacksWindow: _InputWithSearchWindow2.default.cssCallbacks,
                 triangle: false,
                 baseWindowEventsActive: {},
                 delegateElement: false,
@@ -2456,51 +2458,76 @@ var InputWithSearchWindow = function () {
         key: 'reSetPosition',
         value: function reSetPosition() {
 
-            var elem_character = this.getRelativeObject().getWorkDomElement().getBoundingClientRect(),
-                scroll = window.pageYOffset || document.documentElement.scrollTop,
-                style = this.elements.wrapper.style;
+            var elem = this.getRelativeObject().getWorkDomElement();
+
+            if (isHidden(elem)) {
+                this.destructor();
+                return;
+            }
 
             var cssParams = this.settings.cssParams;
-            var width = elem_character.width;
-            if (width < cssParams.minWidth) {
-                width = cssParams.minWidth;
-            }
-            if (width > cssParams.maxWidth) {
-                width = cssParams.maxWidth;
-            }
+            var customFunctionForResizing = this.settings.cssCallbacks;
+            var customFnResize = customFunctionForResizing.window,
+                customFnRePositionTriangle = customFunctionForResizing.triangle;
 
-            var winWidth = window.innerWidth;
 
-            var _cssParams$margin = _slicedToArray(cssParams.margin, 4),
-                mTop = _cssParams$margin[0],
-                mRight = _cssParams$margin[1],
-                mBot = _cssParams$margin[2],
-                mLeft = _cssParams$margin[3];
+            if (checkOnFunction(customFnResize)) {
+                customFnResize(elem, cssParams);
+            } else {
+                var elem_character = elem.getBoundingClientRect();
+                var scroll = window.pageYOffset || document.documentElement.scrollTop;
+                var style = this.elements.wrapper.style;
+                var width = elem_character.width;
 
-            var left = elem_character.left + (elem_character.width - width) / 2;
+                if (width < cssParams.minWidth) {
+                    width = cssParams.minWidth;
+                }
+                if (width > cssParams.maxWidth) {
+                    width = cssParams.maxWidth;
+                }
 
-            if (left < mLeft) {
-                left = mLeft;
-            }
-            if (winWidth - (left + width) < mRight) {
-                left = winWidth - width - mRight;
-            }
+                var winWidth = window.innerWidth;
 
-            style.top = scroll + elem_character.bottom - (scroll + document.body.getBoundingClientRect().top) + 'px';
-            style.left = Math.ceil(left) + 'px';
-            style.width = width + 'px';
-            style.position = 'absolute';
-            if (mTop > 0) {
-                style.marginTop = mTop + 'px';
-            }
-            if (mBot > 0) {
-                style.marginBottom = mBot + 'px';
+                var _cssParams$margin = _slicedToArray(cssParams.margin, 4),
+                    mTop = _cssParams$margin[0],
+                    mRight = _cssParams$margin[1],
+                    mBot = _cssParams$margin[2],
+                    mLeft = _cssParams$margin[3];
+
+                var left = elem_character.left + (elem_character.width - width) / 2;
+
+                if (left < mLeft) {
+                    left = mLeft;
+                }
+                if (winWidth - (left + width) < mRight) {
+                    left = winWidth - width - mRight;
+                }
+
+                style.top = scroll + elem_character.bottom - (scroll + document.body.getBoundingClientRect().top) + 'px';
+                style.left = Math.ceil(left) + 'px';
+                style.width = width + 'px';
+                style.position = 'absolute';
+                if (mTop > 0) {
+                    style.marginTop = mTop + 'px';
+                }
+                if (mBot > 0) {
+                    style.marginBottom = mBot + 'px';
+                }
             }
 
             var triangle = this.getElementByKey('wrapperTriangle');
+
             if (triangle !== null) {
-                var leftTriangle = elem_character.left - left + elem_character.width / 2 - triangle.offsetWidth / 2;
-                triangle.style.left = Math.ceil(leftTriangle) + 'px';
+
+                var _elem_character = elem.getBoundingClientRect();
+                var window_character = this.elements.wrapper.getBoundingClientRect();
+
+                if (checkOnFunction(customFnRePositionTriangle)) {
+                    customFnRePositionTriangle(triangle, elem, cssParams);
+                } else {
+                    var leftTriangle = _elem_character.left - window_character.left + _elem_character.width / 2 - triangle.offsetWidth / 2;
+                    triangle.style.left = Math.ceil(leftTriangle) + 'px';
+                }
             }
         }
     }, {
@@ -2707,10 +2734,30 @@ var InputWithSearchWindow = function () {
                 maxWidth: 300
             };
         }
+    }, {
+        key: 'cssCallbacks',
+        get: function get() {
+            return {
+                window: 'standart',
+                triangle: 'standart'
+            };
+        }
     }]);
 
     return InputWithSearchWindow;
 }();
+
+var isHidden = function isHidden(el) {
+    return el.offsetParent === null;
+};
+
+var checkOnFunction = function checkOnFunction(el) {
+    return typeof el === 'function';
+};
+
+var checkStringOnStandart = function checkStringOnStandart(str) {
+    return str === 'standart';
+};
 
 exports.default = InputWithSearchWindow;
 

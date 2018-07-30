@@ -384,45 +384,69 @@ class InputWithSearchWindow{
 
     reSetPosition(){
 
-        let elem_character = this.getRelativeObject().getWorkDomElement().getBoundingClientRect(),
-            scroll = window.pageYOffset || document.documentElement.scrollTop,
-            style = this.elements.wrapper.style;
+        let elem = this.getRelativeObject().getWorkDomElement();
+
+        if (isHidden(elem)) {
+            this.destructor();
+            return;
+        }
 
         let cssParams = this.settings.cssParams;
-        let width = elem_character.width;
-        if (width < cssParams.minWidth){
-            width = cssParams.minWidth;
-        }
-        if (width > cssParams.maxWidth){
-            width = cssParams.maxWidth;
-        }
+        let customFunctionForResizing = this.settings.cssCallbacks;
+        let {window: customFnResize, triangle: customFnRePositionTriangle} = customFunctionForResizing;
 
-        let winWidth = window.innerWidth;
-        let [mTop, mRight, mBot, mLeft] = cssParams.margin;
-        let left = elem_character.left + (elem_character.width - width)/2;
+        if (checkOnFunction(customFnResize)) {
+            customFnResize(elem, cssParams);
+        } else {
+            let elem_character = elem.getBoundingClientRect();
+            let scroll = window.pageYOffset || document.documentElement.scrollTop;
+            let style = this.elements.wrapper.style;
+            let width = elem_character.width;
 
-        if (left < mLeft){
-            left = mLeft;
-        }
-        if (winWidth - (left + width) < mRight){
-            left = winWidth - width - mRight;
-        }
+            if (width < cssParams.minWidth){
+                width = cssParams.minWidth;
+            }
+            if (width > cssParams.maxWidth){
+                width = cssParams.maxWidth;
+            }
 
-        style.top = scroll + elem_character.bottom - (scroll + document.body.getBoundingClientRect().top) + 'px';
-        style.left = Math.ceil(left) + 'px';
-        style.width = width + 'px';
-        style.position = 'absolute';
-        if (mTop > 0){
-            style.marginTop = mTop + 'px';
-        }
-        if (mBot > 0){
-            style.marginBottom = mBot + 'px';
+            let winWidth = window.innerWidth;
+            let [mTop, mRight, mBot, mLeft] = cssParams.margin;
+            let left = elem_character.left + (elem_character.width - width)/2;
+
+            if (left < mLeft){
+                left = mLeft;
+            }
+            if (winWidth - (left + width) < mRight){
+                left = winWidth - width - mRight;
+            }
+
+            style.top = scroll + elem_character.bottom - (scroll + document.body.getBoundingClientRect().top) + 'px';
+            style.left = Math.ceil(left) + 'px';
+            style.width = width + 'px';
+            style.position = 'absolute';
+            if (mTop > 0){
+                style.marginTop = mTop + 'px';
+            }
+            if (mBot > 0){
+                style.marginBottom = mBot + 'px';
+            }
         }
 
         let triangle = this.getElementByKey('wrapperTriangle');
-        if (triangle !== null){
-            let leftTriangle = (elem_character.left - left) + elem_character.width/2 - triangle.offsetWidth/2;
-            triangle.style.left = Math.ceil(leftTriangle) + 'px';
+
+        if (triangle !== null) {
+
+            let elem_character = elem.getBoundingClientRect();
+            let window_character = this.elements.wrapper.getBoundingClientRect();
+
+            if (checkOnFunction(customFnRePositionTriangle)) {
+                customFnRePositionTriangle(triangle, elem, cssParams);
+            } else {
+                let leftTriangle = (elem_character.left - window_character.left) + elem_character.width/2
+                    - triangle.offsetWidth/2;
+                triangle.style.left = Math.ceil(leftTriangle) + 'px';
+            }
         }
     }
 
@@ -482,6 +506,13 @@ class InputWithSearchWindow{
             margin: [0, 10, 0, 10],
             minWidth: 200,
             maxWidth: 300
+        };
+    }
+
+    static get cssCallbacks() {
+        return {
+            window: 'standart',
+            triangle: 'standart'
         };
     }
 
@@ -623,5 +654,11 @@ class InputWithSearchWindow{
             `;
     }
 }
+
+const isHidden = el => el.offsetParent === null;
+
+const checkOnFunction = el => typeof el === 'function';
+
+const checkStringOnStandart = str => str === 'standart';
 
 export default InputWithSearchWindow;

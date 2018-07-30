@@ -501,6 +501,7 @@ class InputWithSearch{
             classes: getClassesFromSettings(this.settings.classes),
             constructors: getNeedConstructors(this.settings.constructors),
             cssParams: this.settings.cssParamsWindow,
+            cssCallbacks: this.settings.cssCallbacksWindow,
             triangle: this.settings.triangle,
             baseEventsActive: this.settings.baseWindowEventsActive
         };
@@ -741,6 +742,7 @@ class InputWithSearch{
             classes: this.htmlElementsClasses,
             data: false,
             cssParamsWindow: InputWithSearchWindow.defaultCssParams,
+            cssCallbacksWindow: InputWithSearchWindow.cssCallbacks,
             triangle: false,
             baseWindowEventsActive: {},
             delegateElement: false,
