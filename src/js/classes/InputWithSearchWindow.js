@@ -28,6 +28,7 @@ class InputWithSearchWindow{
                 <div class="${this.getClassesByKey('wrapperSub', true)}">
                     <div class="${this.getClassesByKey('wrapperInner', true)}">
                         <div class="${this.getClassesByKey('wrapperList', true)}"></div>
+                        ${this.constructorCloseBtn()}
                     </div>
                 </div>
             `;
@@ -36,6 +37,16 @@ class InputWithSearchWindow{
         wrapper.innerHTML = content;
 
         return wrapper;
+    }
+
+    constructorCloseBtn(){
+        let closeBtn = this.settings.closeBtn;
+
+        if (closeBtn){
+            return `<div class="${this.getClassesByKey('wrapperCloseBtn', true)}"></div>`;
+        }
+        return '';
+
     }
 
     constructorTriangle(){
@@ -236,6 +247,18 @@ class InputWithSearchWindow{
             }
         ];
 
+        if (this.settings.closeBtn){
+            eventsArr.push({
+                name: 'closeBtnEvent',
+                domElement: this.getElementByKey('wrapperCloseBtn'),
+                events: 'click',
+                fn: () => {
+                    this.destructor();
+                },
+                protectedStatus: true
+            });
+        }
+
         eventsArr.forEach((info) => {
             let arrInfo = Object.values(info);
             let name = arrInfo[0];
@@ -402,6 +425,25 @@ class InputWithSearchWindow{
             let scroll = window.pageYOffset || document.documentElement.scrollTop;
             let style = this.elements.wrapper.style;
             let width = elem_character.width;
+            let winWidth = window.innerWidth;
+            let [mTop, mRight, mBot, mLeft] = cssParams.margin;
+            let availablePlaceWidth = winWidth - mLeft - mRight;
+            let seekWidthTo = this.settings.cssParams.seekWidthTo;
+
+            if (seekWidthTo !== 'none') {
+                switch (seekWidthTo) {
+                    case 'max':
+                        width = cssParams.maxWidth;
+                        break;
+                    case 'min':
+                        width = cssParams.minWidth;
+                        break;
+                }
+            }
+
+            if (availablePlaceWidth < width) {
+                width = availablePlaceWidth;
+            }
 
             if (width < cssParams.minWidth){
                 width = cssParams.minWidth;
@@ -410,8 +452,6 @@ class InputWithSearchWindow{
                 width = cssParams.maxWidth;
             }
 
-            let winWidth = window.innerWidth;
-            let [mTop, mRight, mBot, mLeft] = cssParams.margin;
             let left = elem_character.left + (elem_character.width - width)/2;
 
             if (left < mLeft){
@@ -457,6 +497,7 @@ class InputWithSearchWindow{
             wrapperInner: ['InputWithSearchWindow-Inner'],
             wrapperList: ['InputWithSearchWindow-List'],
             wrapperTriangle: ['InputWithSearchWindow-Triangle'],
+            wrapperCloseBtn: ['InputWithSearchWindow-CloseBtn'],
             elementList: ['InputWithSearchWindow-Element'],
             elementListSelected: ['InputWithSearchWindow-Element_selected'],
             elementListHovered: ['InputWithSearchWindow-Element_hovered'],
@@ -489,6 +530,7 @@ class InputWithSearchWindow{
             callbacks: this.listCallbacksAndEvents,
             cssParams: this.defaultCssParams,
             triangle: false,
+            closeBtn: false,
             baseEventsActive: this.baseEventsActive
         };
     }
@@ -505,7 +547,8 @@ class InputWithSearchWindow{
         return {
             margin: [0, 10, 0, 10],
             minWidth: 200,
-            maxWidth: 300
+            maxWidth: 300,
+            seekWidthTo: 'none'
         };
     }
 
@@ -658,7 +701,5 @@ class InputWithSearchWindow{
 const isHidden = el => el.offsetParent === null;
 
 const checkOnFunction = el => typeof el === 'function';
-
-const checkStringOnStandart = str => str === 'standart';
 
 export default InputWithSearchWindow;

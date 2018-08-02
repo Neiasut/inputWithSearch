@@ -83,6 +83,16 @@ body{
       margin-top: 1px;
     }
   }
+  &-CloseBtn{
+    position: absolute;
+    right: 0;
+    top: 0;
+    height: 36px;
+    width: 36px;
+    background-image: url("../img/cross.png");
+    background-size: cover;
+    cursor: pointer;
+  }
 }
 .InputWithSearchLoader{
   width: 48px;
@@ -103,5 +113,17 @@ body{
 @keyframes InputWithSearchLoaderAnimation {
   100% {
     transform: rotate(360deg);
+  }
+}
+.InputWithSearchWindow_theme_openInfo{
+  .InputWithSearchWindow-Inner{
+    max-height: 400px;
+  }
+  .InputWithSearchWindow-List{
+    padding: 20px 40px 20px 20px;
+  }
+  .InputWithSearchWindow-Element{
+    padding: 0;
+    cursor: auto;
   }
 }

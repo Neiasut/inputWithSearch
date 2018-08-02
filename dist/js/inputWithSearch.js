@@ -1532,7 +1532,8 @@ var InputWithSearch = (_class = function () {
                 cssParams: this.settings.cssParamsWindow,
                 cssCallbacks: this.settings.cssCallbacksWindow,
                 triangle: this.settings.triangle,
-                baseEventsActive: this.settings.baseWindowEventsActive
+                baseEventsActive: this.settings.baseWindowEventsActive,
+                closeBtn: this.settings.closeBtn
             };
         }
     }], [{
@@ -1692,6 +1693,7 @@ var InputWithSearch = (_class = function () {
                 cssParamsWindow: _InputWithSearchWindow2.default.defaultCssParams,
                 cssCallbacksWindow: _InputWithSearchWindow2.default.cssCallbacks,
                 triangle: false,
+                closeBtn: false,
                 baseWindowEventsActive: {},
                 delegateElement: false,
                 repositionActiveToTop: true
@@ -2042,12 +2044,22 @@ var InputWithSearchWindow = function () {
         value: function constructorDOM() {
             var _wrapper$classList;
 
-            var content = this.constructorTriangle() + ('\n                <div class="' + this.getClassesByKey('wrapperSub', true) + '">\n                    <div class="' + this.getClassesByKey('wrapperInner', true) + '">\n                        <div class="' + this.getClassesByKey('wrapperList', true) + '"></div>\n                    </div>\n                </div>\n            ');
+            var content = this.constructorTriangle() + ('\n                <div class="' + this.getClassesByKey('wrapperSub', true) + '">\n                    <div class="' + this.getClassesByKey('wrapperInner', true) + '">\n                        <div class="' + this.getClassesByKey('wrapperList', true) + '"></div>\n                        ' + this.constructorCloseBtn() + '\n                    </div>\n                </div>\n            ');
             var wrapper = document.createElement('div');
             (_wrapper$classList = wrapper.classList).add.apply(_wrapper$classList, _toConsumableArray(this.getClassesByKey('wrapper')));
             wrapper.innerHTML = content;
 
             return wrapper;
+        }
+    }, {
+        key: 'constructorCloseBtn',
+        value: function constructorCloseBtn() {
+            var closeBtn = this.settings.closeBtn;
+
+            if (closeBtn) {
+                return '<div class="' + this.getClassesByKey('wrapperCloseBtn', true) + '"></div>';
+            }
+            return '';
         }
     }, {
         key: 'constructorTriangle',
@@ -2282,6 +2294,18 @@ var InputWithSearchWindow = function () {
                 protectedStatus: true
             }];
 
+            if (this.settings.closeBtn) {
+                eventsArr.push({
+                    name: 'closeBtnEvent',
+                    domElement: this.getElementByKey('wrapperCloseBtn'),
+                    events: 'click',
+                    fn: function fn() {
+                        _this2.destructor();
+                    },
+                    protectedStatus: true
+                });
+            }
+
             eventsArr.forEach(function (info) {
                 var arrInfo = Object.values(info);
                 var name = arrInfo[0];
@@ -2478,14 +2502,6 @@ var InputWithSearchWindow = function () {
                 var scroll = window.pageYOffset || document.documentElement.scrollTop;
                 var style = this.elements.wrapper.style;
                 var width = elem_character.width;
-
-                if (width < cssParams.minWidth) {
-                    width = cssParams.minWidth;
-                }
-                if (width > cssParams.maxWidth) {
-                    width = cssParams.maxWidth;
-                }
-
                 var winWidth = window.innerWidth;
 
                 var _cssParams$margin = _slicedToArray(cssParams.margin, 4),
@@ -2493,6 +2509,31 @@ var InputWithSearchWindow = function () {
                     mRight = _cssParams$margin[1],
                     mBot = _cssParams$margin[2],
                     mLeft = _cssParams$margin[3];
+
+                var availablePlaceWidth = winWidth - mLeft - mRight;
+                var seekWidthTo = this.settings.cssParams.seekWidthTo;
+
+                if (seekWidthTo !== 'none') {
+                    switch (seekWidthTo) {
+                        case 'max':
+                            width = cssParams.maxWidth;
+                            break;
+                        case 'min':
+                            width = cssParams.minWidth;
+                            break;
+                    }
+                }
+
+                if (availablePlaceWidth < width) {
+                    width = availablePlaceWidth;
+                }
+
+                if (width < cssParams.minWidth) {
+                    width = cssParams.minWidth;
+                }
+                if (width > cssParams.maxWidth) {
+                    width = cssParams.maxWidth;
+                }
 
                 var left = elem_character.left + (elem_character.width - width) / 2;
 
@@ -2675,6 +2716,7 @@ var InputWithSearchWindow = function () {
                 wrapperInner: ['InputWithSearchWindow-Inner'],
                 wrapperList: ['InputWithSearchWindow-List'],
                 wrapperTriangle: ['InputWithSearchWindow-Triangle'],
+                wrapperCloseBtn: ['InputWithSearchWindow-CloseBtn'],
                 elementList: ['InputWithSearchWindow-Element'],
                 elementListSelected: ['InputWithSearchWindow-Element_selected'],
                 elementListHovered: ['InputWithSearchWindow-Element_hovered'],
@@ -2713,6 +2755,7 @@ var InputWithSearchWindow = function () {
                 callbacks: this.listCallbacksAndEvents,
                 cssParams: this.defaultCssParams,
                 triangle: false,
+                closeBtn: false,
                 baseEventsActive: this.baseEventsActive
             };
         }
@@ -2731,7 +2774,8 @@ var InputWithSearchWindow = function () {
             return {
                 margin: [0, 10, 0, 10],
                 minWidth: 200,
-                maxWidth: 300
+                maxWidth: 300,
+                seekWidthTo: 'none'
             };
         }
     }, {
@@ -2753,10 +2797,6 @@ var isHidden = function isHidden(el) {
 
 var checkOnFunction = function checkOnFunction(el) {
     return typeof el === 'function';
-};
-
-var checkStringOnStandart = function checkStringOnStandart(str) {
-    return str === 'standart';
 };
 
 exports.default = InputWithSearchWindow;
@@ -3145,6 +3185,54 @@ function _defineProperty(obj, key, value) { if (key in obj) { Object.definePrope
 
 /***/ }),
 
+/***/ "./src/js/themes/listThemes/openInfo.js":
+/*!**********************************************!*\
+  !*** ./src/js/themes/listThemes/openInfo.js ***!
+  \**********************************************/
+/*! no static exports found */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+Object.defineProperty(exports, "__esModule", {
+    value: true
+});
+
+var _defaultExportTheme = __webpack_require__(/*! ../defaultExportTheme */ "./src/js/themes/defaultExportTheme.js");
+
+var _defaultExportTheme2 = _interopRequireDefault(_defaultExportTheme);
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+exports.default = (0, _defaultExportTheme2.default)('openInfo', {
+    baseWindowEventsActive: {
+        interceptionEvents: false,
+        mouseEnterElement: false,
+        clickElement: false
+    },
+    constructors: {
+        element: function element(data) {
+            return data;
+        }
+    },
+    maxViewElements: 1,
+    classes: {
+        wrapper: ['InputWithSearchWindow_theme_openInfo']
+    },
+    cssParamsWindow: {
+        minWidth: 200,
+        maxWidth: 286,
+        seekWidthTo: 'max'
+    }
+}, function (object) {
+    var rootElement = object.getWorkDomElement();
+    var innHTML = rootElement.getAttribute('data-iws-data');
+    object.setCustomData([innHTML]);
+});
+
+/***/ }),
+
 /***/ "./src/js/themes/listThemes/select.js":
 /*!********************************************!*\
   !*** ./src/js/themes/listThemes/select.js ***!
@@ -3333,6 +3421,10 @@ var _select = __webpack_require__(/*! ./listThemes/select */ "./src/js/themes/li
 
 var _select2 = _interopRequireDefault(_select);
 
+var _openInfo = __webpack_require__(/*! ./listThemes/openInfo */ "./src/js/themes/listThemes/openInfo.js");
+
+var _openInfo2 = _interopRequireDefault(_openInfo);
+
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr2 = Array(arr.length); i < arr.length; i++) { arr2[i] = arr[i]; } return arr2; } else { return Array.from(arr); } }
@@ -3343,6 +3435,7 @@ function runDefaultThemes() {
 
     inputWithSearch.addTheme.apply(inputWithSearch, _toConsumableArray(_withPerfectScrollbar2.default));
     inputWithSearch.addTheme.apply(inputWithSearch, _toConsumableArray(_select2.default));
+    inputWithSearch.addTheme.apply(inputWithSearch, _toConsumableArray(_openInfo2.default));
 }
 
 /***/ }),

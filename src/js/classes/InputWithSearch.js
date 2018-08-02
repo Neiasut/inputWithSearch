@@ -503,7 +503,8 @@ class InputWithSearch{
             cssParams: this.settings.cssParamsWindow,
             cssCallbacks: this.settings.cssCallbacksWindow,
             triangle: this.settings.triangle,
-            baseEventsActive: this.settings.baseWindowEventsActive
+            baseEventsActive: this.settings.baseWindowEventsActive,
+            closeBtn: this.settings.closeBtn
         };
     }
 
@@ -744,6 +745,7 @@ class InputWithSearch{
             cssParamsWindow: InputWithSearchWindow.defaultCssParams,
             cssCallbacksWindow: InputWithSearchWindow.cssCallbacks,
             triangle: false,
+            closeBtn: false,
             baseWindowEventsActive: {},
             delegateElement: false,
             repositionActiveToTop: true

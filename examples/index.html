@@ -57,6 +57,12 @@
         .InputWithSearchSelect{
             display: inline-block;
         }
+        .wrapperTest8{
+            width: 33%;
+        }
+        #test8{
+            display: inline-block;
+        }
     </style>
 </head>
 <body>
@@ -78,6 +84,10 @@
             <option>Test3</option>
             <option>Test4</option>
         </select>
+    </div>
+    <div class="wrapperTest8">
+        <h4>Typical open with info</h4>
+        <div data-iws-data="<b>Test</b>Test2test4" id="test8">Hover on me</div>
     </div>
 
     <script src="../node_modules/babel-polyfill/dist/polyfill.min.js"></script>
@@ -203,6 +213,12 @@
         inputWithSearch.getElement('test7')._domElement.addEventListener('inputWithSearch_changeActive', (e) => {
             console.log(e.detail.inputWithSearch.key);
         });
+
+        inputWithSearch.getElement('test8', {
+            onEvents: 'hover',
+            closeBtn: true,
+            triangle: true
+        }, ['openInfo']);
 
     </script>
 </body>

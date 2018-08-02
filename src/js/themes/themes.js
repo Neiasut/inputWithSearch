@@ -1,5 +1,6 @@
 import withPerfectScrollbarTheme from './listThemes/withPerfectScrollbar';
 import selectTheme from './listThemes/select';
+import openInfo from './listThemes/openInfo';
 
 export default function runDefaultThemes() {
 
@@ -7,5 +8,5 @@ export default function runDefaultThemes() {
 
     inputWithSearch.addTheme(...withPerfectScrollbarTheme);
     inputWithSearch.addTheme(...selectTheme);
-
+    inputWithSearch.addTheme(...openInfo);
 }
