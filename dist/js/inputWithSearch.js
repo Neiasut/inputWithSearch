@@ -1736,6 +1736,8 @@ Object.defineProperty(exports, "__esModule", {
     value: true
 });
 
+var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol" ? function (obj) { return typeof obj; } : function (obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; };
+
 var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
 
 var _ListInputWithSearch = __webpack_require__(/*! ./ListInputWithSearch */ "./src/js/classes/ListInputWithSearch.js");
@@ -1759,6 +1761,8 @@ var _weakMapIWS = __webpack_require__(/*! ../functions/weakMapIWS */ "./src/js/f
 var _weakMapIWS2 = _interopRequireDefault(_weakMapIWS);
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr2 = Array(arr.length); i < arr.length; i++) { arr2[i] = arr[i]; } return arr2; } else { return Array.from(arr); } }
 
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
@@ -1840,6 +1844,25 @@ var InputWithSearchForWindow = function () {
                 return retObject;
             };
 
+            var classesArraysSlice = function classesArraysSlice(themeClasses, objectClasses) {
+                if ((typeof themeClasses === 'undefined' ? 'undefined' : _typeof(themeClasses)) === 'object' && (typeof objectClasses === 'undefined' ? 'undefined' : _typeof(objectClasses)) === 'object') {
+                    var keysTheme = Object.keys(themeClasses),
+                        keysObject = Object.keys(objectClasses),
+                        summKeys = [].concat(_toConsumableArray(new Set([].concat(_toConsumableArray(keysTheme), _toConsumableArray(keysObject)))));
+                    return summKeys.reduce(function (acc, key) {
+                        var inTheme = key in themeClasses,
+                            inObject = key in objectClasses;
+                        if (inTheme && inObject) {
+                            acc[key] = [].concat(_toConsumableArray(new Set([].concat(_toConsumableArray(themeClasses[key]), _toConsumableArray(objectClasses[key])))));
+                            return acc;
+                        }
+                        acc[key] = inTheme ? themeClasses[key] : objectClasses[key];
+                        return acc;
+                    }, {});
+                }
+                return {};
+            };
+
             var element = checkHTMLfn(domElement) ? domElement : getElemById(domElement);
 
             if (element !== false) {
@@ -1886,7 +1909,9 @@ var InputWithSearchForWindow = function () {
 
                             var objectData = _objectTheme.objectData;
                             if (Object.keys(objectData).length) {
+                                var classes = classesArraysSlice(objectData.classes, objectConfig.classes);
                                 objectConfig = _functions2.default.extend(true, {}, objectData, objectConfig);
+                                objectConfig.classes = classes;
                             }
                         }
                     } catch (err) {
