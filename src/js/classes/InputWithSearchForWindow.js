@@ -74,25 +74,6 @@ class InputWithSearchForWindow{
             return retObject;
         };
 
-        const classesArraysSlice = (themeClasses, objectClasses) => {
-            if (typeof themeClasses === 'object' && typeof objectClasses === 'object') {
-                let keysTheme = Object.keys(themeClasses),
-                    keysObject = Object.keys(objectClasses),
-                    summKeys =  [...new Set([...keysTheme,...keysObject])];
-                return summKeys.reduce((acc, key) => {
-                    let inTheme = key in themeClasses,
-                        inObject = key in objectClasses;
-                    if (inTheme && inObject) {
-                        acc[key] = [...new Set([...themeClasses[key], ...objectClasses[key]])];
-                        return acc;
-                    }
-                    acc[key] = inTheme ? themeClasses[key] : objectClasses[key];
-                    return acc;
-                }, {});
-            }
-            return {};
-        };
-
         let element = checkHTMLfn(domElement)
             ? domElement
             : getElemById(domElement);
@@ -112,7 +93,7 @@ class InputWithSearchForWindow{
                 for (let objectTheme of availableThemeConfigs){
                     let objectData = objectTheme.objectData;
                     if (Object.keys(objectData).length){
-                        let classes = classesArraysSlice(objectData.classes, objectConfig.classes);
+                        let classes = funcs.sliceObjectArrays(objectData.classes, objectConfig.classes);
                         objectConfig = funcs.extend(true, {}, objectData, objectConfig);
                         objectConfig.classes = classes;
                     }

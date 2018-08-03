@@ -96,6 +96,59 @@ const insertAfter = (newNode, referenceNode) => {
     referenceNode.parentNode.insertBefore(newNode, referenceNode.nextSibling);
 };
 
+/**
+ *
+ * @param {...Object} args
+ * @return {string|{}}
+ */
+const classesArraysSlice = (...args) => {
+
+    let dataArgs = args.map(element => {
+        let newObject = {};
+        if (typeof element !== 'object') {
+            return newObject;
+        }
+        for (let [key, value] of Object.entries(element)){
+            if (Array.isArray(value)){
+                newObject[key] = value.slice(0);
+            }
+        }
+        return newObject;
+    });
+
+    let [firstArg, secondArg] = dataArgs;
+
+    let keysTheme = Object.keys(firstArg),
+        keysObject = Object.keys(secondArg),
+        summKeys =  [...new Set([...keysTheme,...keysObject])];
+
+    return summKeys.reduce((acc, key) => {
+        let inTheme = key in firstArg,
+            inObject = key in secondArg;
+        if (inTheme && inObject) {
+            acc[key] = [...new Set([...firstArg[key], ...secondArg[key]])];
+            return acc;
+        }
+        acc[key] = inTheme ? firstArg[key] : secondArg[key];
+        return acc;
+    }, {});
+};
+
+/**
+ *
+ * @param {...Object} args
+ * @return {Object}
+ */
+const sliceObjectArrays = (...args) => {
+    if (args.length === 0){
+        return {};
+    }
+    if (args.length === 1){
+        return extend(true, {}, args[0]);
+    }
+    return args.reduce((acc, arg) => classesArraysSlice(acc, arg), {});
+};
+
 const funcs = {
     delegateFn,
     extend,
@@ -103,7 +156,8 @@ const funcs = {
     hasClass,
     highlightMatchesToString,
     mergeListArraysWithoutDuplicates,
-    insertAfter
+    insertAfter,
+    sliceObjectArrays
 };
 
 export default funcs;
