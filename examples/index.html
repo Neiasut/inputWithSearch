@@ -187,7 +187,12 @@
         inputWithSearch.getElement('test6', {
             onEvents: 'click',
             triangle: true,
-            repositionActiveToTop: false
+            repositionActiveToTop: false,
+            callbacks: {
+                inputWithSearch_beforeDestruction: () => {
+                    console.log('i was remove from page ;(');
+                }
+            }
         }).setCustomData(
             [
                 'test text for checking projects things',

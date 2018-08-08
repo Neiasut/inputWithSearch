@@ -818,10 +818,16 @@ var InputWithSearch = (_class = function () {
 
         InputWithSearch.addAttrToDomInput(this.getWorkDomElement());
 
+        this._toggleInitClass();
         this.fireEventAndCallback('inputWithSearch_afterInit');
     }
 
     _createClass(InputWithSearch, [{
+        key: '_toggleInitClass',
+        value: function _toggleInitClass() {
+            this._domElement.classList.toggle(InputWithSearch.getBaseClassesByKey('initialize')[0]);
+        }
+    }, {
         key: 'getWorkDomElement',
         value: function getWorkDomElement() {
             var useInitDomImportant = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : false;
@@ -1389,6 +1395,7 @@ var InputWithSearch = (_class = function () {
             this.removeEventListeners();
             InputWithSearch.setInputActive(HTMLElement, false);
             (_HTMLElement$classLis = HTMLElement.classList).remove.apply(_HTMLElement$classLis, _toConsumableArray(this.getClassesByKey('input')));
+            this._toggleInitClass();
             _weakMapIWS2.default.getDataWeakMapIWS(_InputWithSearchForWindow2.default.getInstance()).list.removeElement(HTMLElement);
         }
     }, {
@@ -1604,6 +1611,11 @@ var InputWithSearch = (_class = function () {
             };
         }
     }, {
+        key: 'getInHtmlElementAllElementsByClass',
+        value: function getInHtmlElementAllElementsByClass(domElement) {
+            return domElement.querySelectorAll('.' + this.getBaseClassesByKey('initialize')[0]);
+        }
+    }, {
         key: 'statuses',
         get: function get() {
             return {
@@ -1617,6 +1629,7 @@ var InputWithSearch = (_class = function () {
         key: 'baseClasses',
         get: function get() {
             return {
+                initialize: ['InputWithSearchRoot'],
                 input: ['InputWithSearch'],
                 bodyOpen: ['InputWithSearchOpen']
             };
@@ -1630,7 +1643,7 @@ var InputWithSearch = (_class = function () {
                 writable: false
             };
 
-            var notChangeableKeys = ['input', 'bodyOpen'];
+            var notChangeableKeys = ['input', 'bodyOpen', 'initialize'];
 
             var generateObjectForChange = function generateObjectForChange(keys, object) {
                 return keys.reduce(function (acc, current) {
@@ -1764,6 +1777,8 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 
 var InputWithSearchForWindow = function () {
     function InputWithSearchForWindow() {
+        var _this = this;
+
         _classCallCheck(this, InputWithSearchForWindow);
 
         if (InputWithSearchForWindow.hasOwnProperty('singleton')) return InputWithSearchForWindow.singleton;
@@ -1785,6 +1800,27 @@ var InputWithSearchForWindow = function () {
         };
 
         _weakMapIWS2.default.setDataWeakMapIWS(this, protectedFields);
+
+        var mutationObserver = new MutationObserver(function (mutations) {
+            mutations.forEach(function (mutation) {
+                Array.prototype.slice.call(mutation.removedNodes, 0).filter(function (element) {
+                    if (_this.checkInit(element)) {
+                        _this.get(element).destructor();
+                    } else {
+                        if (element instanceof HTMLElement) {
+                            Array.prototype.slice.call(_InputWithSearch2.default.getInHtmlElementAllElementsByClass(element), 0).forEach(function (elementWasInit) {
+                                _this.get(elementWasInit).destructor();
+                            });
+                        }
+                    }
+                });
+            });
+        });
+
+        mutationObserver.observe(document.documentElement, {
+            childList: true,
+            subtree: true
+        });
     }
 
     /**
@@ -1799,12 +1835,161 @@ var InputWithSearchForWindow = function () {
     _createClass(InputWithSearchForWindow, [{
         key: 'getElement',
         value: function getElement(domElement) {
-            var _this = this;
+            var objectConfig = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};
+            var themes = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : '';
+
+            var element = this._getElementFromPage(domElement);
+
+            if (element !== false) {
+                if (!this.checkInit(element)) {
+                    this.init(element, objectConfig, themes);
+                }
+                return this.get(element);
+            }
+
+            throw new Error('\u041D\u0435\u0442 \u0432\u0430\u043B\u0438\u0434\u043D\u043E\u0433\u043E DOM-\u044D\u043B\u0435\u043C\u0435\u043D\u0442\u0430 \u0434\u043B\u044F \u0432\u044B\u0434\u0430\u0447\u0438 ' + domElement);
+        }
+
+        /**
+         * InitFunction
+         * @param {HTMLElement} element
+         * @param {object} objectConfig
+         * @param {string|string[]} themes
+         * @returns {InputWithSearch}
+         */
+
+    }, {
+        key: 'init',
+        value: function init(element) {
+            var _this2 = this;
 
             var objectConfig = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};
             var themes = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : '';
 
 
+            var getListAvailableThemeConfig = function getListAvailableThemeConfig() {
+
+                var retObject = {};
+
+                if (themes !== '') {
+                    if (!Array.isArray(themes)) {
+                        themes = [themes];
+                    }
+                    var themesList = _weakMapIWS2.default.getDataWeakMapIWS(_this2).themes;
+
+                    themes.reduce(function (acc, themeName) {
+                        if (themesList.has(themeName)) {
+                            acc[themeName] = themesList.get(themeName);
+                        }
+                        return acc;
+                    }, retObject);
+                }
+                return retObject;
+            };
+
+            var list = _weakMapIWS2.default.getDataWeakMapIWS(this).list;
+            var availableThemeConfigs = Object.values(getListAvailableThemeConfig());
+            var _iteratorNormalCompletion = true;
+            var _didIteratorError = false;
+            var _iteratorError = undefined;
+
+            try {
+                for (var _iterator = availableThemeConfigs[Symbol.iterator](), _step; !(_iteratorNormalCompletion = (_step = _iterator.next()).done); _iteratorNormalCompletion = true) {
+                    var objectTheme = _step.value;
+
+                    var fn = objectTheme.fnRunBeforeStart;
+                    if (typeof fn === 'function') {
+                        fn.call(null, element);
+                    }
+                }
+            } catch (err) {
+                _didIteratorError = true;
+                _iteratorError = err;
+            } finally {
+                try {
+                    if (!_iteratorNormalCompletion && _iterator.return) {
+                        _iterator.return();
+                    }
+                } finally {
+                    if (_didIteratorError) {
+                        throw _iteratorError;
+                    }
+                }
+            }
+
+            var _iteratorNormalCompletion2 = true;
+            var _didIteratorError2 = false;
+            var _iteratorError2 = undefined;
+
+            try {
+                for (var _iterator2 = availableThemeConfigs[Symbol.iterator](), _step2; !(_iteratorNormalCompletion2 = (_step2 = _iterator2.next()).done); _iteratorNormalCompletion2 = true) {
+                    var _objectTheme = _step2.value;
+
+                    var objectData = _objectTheme.objectData;
+                    if (Object.keys(objectData).length) {
+                        var classes = _functions2.default.sliceObjectArrays(objectData.classes, objectConfig.classes);
+                        objectConfig = _functions2.default.extend(true, {}, objectData, objectConfig);
+                        objectConfig.classes = classes;
+                    }
+                }
+            } catch (err) {
+                _didIteratorError2 = true;
+                _iteratorError2 = err;
+            } finally {
+                try {
+                    if (!_iteratorNormalCompletion2 && _iterator2.return) {
+                        _iterator2.return();
+                    }
+                } finally {
+                    if (_didIteratorError2) {
+                        throw _iteratorError2;
+                    }
+                }
+            }
+
+            var exemplar = new _InputWithSearch2.default(element, objectConfig);
+            list.addElement(element, exemplar);
+            var _iteratorNormalCompletion3 = true;
+            var _didIteratorError3 = false;
+            var _iteratorError3 = undefined;
+
+            try {
+                for (var _iterator3 = availableThemeConfigs[Symbol.iterator](), _step3; !(_iteratorNormalCompletion3 = (_step3 = _iterator3.next()).done); _iteratorNormalCompletion3 = true) {
+                    var _objectTheme2 = _step3.value;
+
+                    var fn = _objectTheme2.fnRunOnStart;
+                    if (typeof fn === 'function') {
+                        fn.call(null, exemplar);
+                    }
+                }
+            } catch (err) {
+                _didIteratorError3 = true;
+                _iteratorError3 = err;
+            } finally {
+                try {
+                    if (!_iteratorNormalCompletion3 && _iterator3.return) {
+                        _iterator3.return();
+                    }
+                } finally {
+                    if (_didIteratorError3) {
+                        throw _iteratorError3;
+                    }
+                }
+            }
+
+            return list.getElement(element);
+        }
+
+        /**
+         * Get element from page by string or return HTMLElement
+         * @param {HTMLElement|string} domElement
+         * @return {boolean|HTMLElement}
+         * @private
+         */
+
+    }, {
+        key: '_getElementFromPage',
+        value: function _getElementFromPage(domElement) {
             var checkIdFn = function checkIdFn(someData) {
                 if (typeof someData === 'string') {
                     return checkHTMLfn(document.getElementById(someData));
@@ -1820,127 +2005,33 @@ var InputWithSearchForWindow = function () {
                 return checkIdFn(stringId) ? document.getElementById(stringId) : false;
             };
 
-            var getListAvailableThemeConfig = function getListAvailableThemeConfig() {
-
-                var retObject = {};
-
-                if (themes !== '') {
-                    if (!Array.isArray(themes)) {
-                        themes = [themes];
-                    }
-                    var themesList = _weakMapIWS2.default.getDataWeakMapIWS(_this).themes;
-
-                    themes.reduce(function (acc, themeName) {
-                        if (themesList.has(themeName)) {
-                            acc[themeName] = themesList.get(themeName);
-                        }
-                        return acc;
-                    }, retObject);
-                }
-                return retObject;
-            };
-
             var element = checkHTMLfn(domElement) ? domElement : getElemById(domElement);
 
-            if (element !== false) {
+            return element;
+        }
 
-                var list = _weakMapIWS2.default.getDataWeakMapIWS(this).list;
+        /**
+         * Get element
+         * @param {HTMLElement|string} domElement
+         * @return {InputWithSearch|undefined}
+         */
 
-                if (!list.hasElement(element)) {
-                    var availableThemeConfigs = Object.values(getListAvailableThemeConfig());
-                    var _iteratorNormalCompletion = true;
-                    var _didIteratorError = false;
-                    var _iteratorError = undefined;
+    }, {
+        key: 'get',
+        value: function get(domElement) {
+            return _weakMapIWS2.default.getDataWeakMapIWS(this).list.getElement(this._getElementFromPage(domElement));
+        }
 
-                    try {
-                        for (var _iterator = availableThemeConfigs[Symbol.iterator](), _step; !(_iteratorNormalCompletion = (_step = _iterator.next()).done); _iteratorNormalCompletion = true) {
-                            var objectTheme = _step.value;
+        /**
+         * Check dom element init
+         * @param {HTMLElement} domElement
+         * @return {boolean}
+         */
 
-                            var fn = objectTheme.fnRunBeforeStart;
-                            if (typeof fn === 'function') {
-                                fn.call(null, element);
-                            }
-                        }
-                    } catch (err) {
-                        _didIteratorError = true;
-                        _iteratorError = err;
-                    } finally {
-                        try {
-                            if (!_iteratorNormalCompletion && _iterator.return) {
-                                _iterator.return();
-                            }
-                        } finally {
-                            if (_didIteratorError) {
-                                throw _iteratorError;
-                            }
-                        }
-                    }
-
-                    var _iteratorNormalCompletion2 = true;
-                    var _didIteratorError2 = false;
-                    var _iteratorError2 = undefined;
-
-                    try {
-                        for (var _iterator2 = availableThemeConfigs[Symbol.iterator](), _step2; !(_iteratorNormalCompletion2 = (_step2 = _iterator2.next()).done); _iteratorNormalCompletion2 = true) {
-                            var _objectTheme = _step2.value;
-
-                            var objectData = _objectTheme.objectData;
-                            if (Object.keys(objectData).length) {
-                                var classes = _functions2.default.sliceObjectArrays(objectData.classes, objectConfig.classes);
-                                objectConfig = _functions2.default.extend(true, {}, objectData, objectConfig);
-                                objectConfig.classes = classes;
-                            }
-                        }
-                    } catch (err) {
-                        _didIteratorError2 = true;
-                        _iteratorError2 = err;
-                    } finally {
-                        try {
-                            if (!_iteratorNormalCompletion2 && _iterator2.return) {
-                                _iterator2.return();
-                            }
-                        } finally {
-                            if (_didIteratorError2) {
-                                throw _iteratorError2;
-                            }
-                        }
-                    }
-
-                    var exemplar = new _InputWithSearch2.default(element, objectConfig);
-                    list.addElement(element, exemplar);
-                    var _iteratorNormalCompletion3 = true;
-                    var _didIteratorError3 = false;
-                    var _iteratorError3 = undefined;
-
-                    try {
-                        for (var _iterator3 = availableThemeConfigs[Symbol.iterator](), _step3; !(_iteratorNormalCompletion3 = (_step3 = _iterator3.next()).done); _iteratorNormalCompletion3 = true) {
-                            var _objectTheme2 = _step3.value;
-
-                            var fn = _objectTheme2.fnRunOnStart;
-                            if (typeof fn === 'function') {
-                                fn.call(null, exemplar);
-                            }
-                        }
-                    } catch (err) {
-                        _didIteratorError3 = true;
-                        _iteratorError3 = err;
-                    } finally {
-                        try {
-                            if (!_iteratorNormalCompletion3 && _iterator3.return) {
-                                _iterator3.return();
-                            }
-                        } finally {
-                            if (_didIteratorError3) {
-                                throw _iteratorError3;
-                            }
-                        }
-                    }
-                }
-
-                return list.getElement(element);
-            }
-
-            throw new Error('\u041D\u0435\u0442 \u0432\u0430\u043B\u0438\u0434\u043D\u043E\u0433\u043E DOM-\u044D\u043B\u0435\u043C\u0435\u043D\u0442\u0430 \u0434\u043B\u044F \u0432\u044B\u0434\u0430\u0447\u0438 ' + domElement);
+    }, {
+        key: 'checkInit',
+        value: function checkInit(domElement) {
+            return _weakMapIWS2.default.getDataWeakMapIWS(this).list.hasElement(domElement);
         }
 
         /**
@@ -2012,6 +2103,10 @@ var _functions = __webpack_require__(/*! ../functions/functions */ "./src/js/fun
 
 var _functions2 = _interopRequireDefault(_functions);
 
+var _WatcherPosition = __webpack_require__(/*! ./WatcherPosition */ "./src/js/classes/WatcherPosition.js");
+
+var _WatcherPosition2 = _interopRequireDefault(_WatcherPosition);
+
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr2 = Array(arr.length); i < arr.length; i++) { arr2[i] = arr[i]; } return arr2; } else { return Array.from(arr); } }
@@ -2034,6 +2129,7 @@ var InputWithSearchWindow = function () {
         this.setStatus();
 
         this.reSetPosition();
+        this.fireEventAndCallback('inputWithSearchWindow_afterConstruction');
     }
 
     _createClass(InputWithSearchWindow, [{
@@ -2224,14 +2320,6 @@ var InputWithSearchWindow = function () {
                 },
                 protectedStatus: true
             }, {
-                name: 'resize',
-                domElement: window,
-                events: 'resize',
-                fn: function fn() {
-                    _this2.reSetPosition();
-                },
-                protectedStatus: true
-            }, {
                 name: 'clickOuter',
                 domElement: document,
                 events: 'click',
@@ -2292,6 +2380,22 @@ var InputWithSearchWindow = function () {
                             relativeClass.close();
                         }
                     }
+                },
+                protectedStatus: true
+            }, {
+                name: 'watcherPosition',
+                domElement: wrapper,
+                events: 'inputWithSearchWindow_afterConstruction',
+                fn: function fn() {
+                    _this2._addWatcherPosition();
+                },
+                protectedStatus: true
+            }, {
+                name: 'removeWatcherPosition',
+                domElement: wrapper,
+                events: 'inputWithSearchWindow_destruction',
+                fn: function fn() {
+                    _this2._removeWatcherPosition();
                 },
                 protectedStatus: true
             }];
@@ -2679,6 +2783,21 @@ var InputWithSearchWindow = function () {
             this.setStatus();
             this.addInfoToList(InputWithSearchWindow.constructWaitThrobber());
         }
+    }, {
+        key: '_addWatcherPosition',
+        value: function _addWatcherPosition() {
+            var _this4 = this;
+
+            var element = this.getRelativeObject().getWorkDomElement();
+            this._watcher = new _WatcherPosition2.default(element, function () {
+                _this4.reSetPosition();
+            });
+        }
+    }, {
+        key: '_removeWatcherPosition',
+        value: function _removeWatcherPosition() {
+            this._watcher.destructor();
+        }
     }], [{
         key: '_getKeyAttrFromDomElement',
         value: function _getKeyAttrFromDomElement(domElement) {
@@ -2732,7 +2851,8 @@ var InputWithSearchWindow = function () {
             return {
                 'inputWithSearchWindow_clickOnElementList': false,
                 'inputWithSearchWindow_destruction': false,
-                'inputWithSearchWindow_changeContent': false
+                'inputWithSearchWindow_changeContent': false,
+                'inputWithSearchWindow_afterConstruction': false
             };
         }
     }, {
@@ -2863,6 +2983,141 @@ var ListInputWithSearch = function () {
 }();
 
 exports.default = ListInputWithSearch;
+
+/***/ }),
+
+/***/ "./src/js/classes/WatcherPosition.js":
+/*!*******************************************!*\
+  !*** ./src/js/classes/WatcherPosition.js ***!
+  \*******************************************/
+/*! no static exports found */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+Object.defineProperty(exports, "__esModule", {
+    value: true
+});
+
+var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
+
+function _defineProperty(obj, key, value) { if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
+
+function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr2 = Array(arr.length); i < arr.length; i++) { arr2[i] = arr[i]; } return arr2; } else { return Array.from(arr); } }
+
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+var WatcherPosition = function () {
+    function WatcherPosition(domWatch, cb) {
+        var timeTik = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : 50;
+
+        _classCallCheck(this, WatcherPosition);
+
+        this.domWatch = domWatch;
+        this.cb = cb;
+        this.timeTik = timeTik;
+        this._savePositionFromElement();
+        this._addInterval();
+    }
+
+    _createClass(WatcherPosition, [{
+        key: "_savePositionFromElement",
+        value: function _savePositionFromElement() {
+            var positionObject = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : false;
+
+            this._positionBefore = saveParams.apply(undefined, _toConsumableArray(positionObject === false ? getParamsFromDomElement(this.domWatch) : positionObject));
+        }
+    }, {
+        key: "_getPositionBefore",
+        value: function _getPositionBefore() {
+            return this._positionBefore;
+        }
+    }, {
+        key: "_addInterval",
+        value: function _addInterval() {
+            var _this = this;
+
+            this._interval = setInterval(function () {
+                _this._fireFunctionOnTik();
+            }, this.timeTik);
+        }
+    }, {
+        key: "_fireFunctionOnTik",
+        value: function _fireFunctionOnTik() {
+            var newPosition = getParamsFromDomElement(this.domWatch);
+            if (differentTwoObjectPosition(this._getPositionBefore(), newPosition)) {
+                this._savePositionFromElement(newPosition);
+                this.cb();
+            }
+        }
+    }, {
+        key: "destructor",
+        value: function destructor() {
+            clearInterval(this._interval);
+        }
+    }]);
+
+    return WatcherPosition;
+}();
+
+var getScrolls = function getScrolls() {
+    var doc = document.documentElement;
+    var left = (window.pageXOffset || doc.scrollLeft) - (doc.clientLeft || 0);
+    var top = (window.pageYOffset || doc.scrollTop) - (doc.clientTop || 0);
+
+    return {
+        left: left,
+        top: top
+    };
+};
+
+var getParamsFromDomElement = function getParamsFromDomElement(domElement) {
+    var position = domElement.getBoundingClientRect();
+    var scrolls = getScrolls();
+    return saveParams(position.width, position.height, position.left + scrolls.left, position.top + scrolls.top);
+};
+
+var saveParams = function saveParams(width, height, left, top) {
+    return _defineProperty({
+        width: width,
+        height: height,
+        left: left,
+        top: top
+    }, Symbol.iterator, /*#__PURE__*/regeneratorRuntime.mark(function _callee() {
+        return regeneratorRuntime.wrap(function _callee$(_context) {
+            while (1) {
+                switch (_context.prev = _context.next) {
+                    case 0:
+                        _context.next = 2;
+                        return this.width;
+
+                    case 2:
+                        _context.next = 4;
+                        return this.height;
+
+                    case 4:
+                        _context.next = 6;
+                        return this.left;
+
+                    case 6:
+                        _context.next = 8;
+                        return this.top;
+
+                    case 8:
+                    case "end":
+                        return _context.stop();
+                }
+            }
+        }, _callee, this);
+    }));
+};
+
+var differentTwoObjectPosition = function differentTwoObjectPosition(obj1, obj2) {
+    return !(JSON.stringify(obj1) === JSON.stringify(obj2));
+};
+
+exports.default = WatcherPosition;
 
 /***/ }),
 
@@ -3430,7 +3685,10 @@ var cbBeforeDestruct = function cbBeforeDestruct(e) {
     HTMLElem.removeEventListener('inputWithSearch_beforeInit', cbBeforeStart);
     HTMLElem.removeEventListener('inputWithSearch_beforeDestruction', cbBeforeDestruct);
     HTMLElem.style.display = '';
-    HTMLElem.parentElement.removeChild(document.getElementById(constructIdSelect(object.id)));
+    var delegateElement = document.getElementById(constructIdSelect(object.id));
+    if (delegateElement !== null) {
+        HTMLElem.parentElement.removeChild(delegateElement);
+    }
 };
 
 var cbOnChangeData = function cbOnChangeData() {

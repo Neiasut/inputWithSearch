@@ -1,5 +1,6 @@
 import EventSave from './EventSave';
 import funcs from '../functions/functions';
+import WatcherPosition from './WatcherPosition';
 
 class InputWithSearchWindow{
 
@@ -17,6 +18,7 @@ class InputWithSearchWindow{
         this.setStatus();
 
         this.reSetPosition();
+        this.fireEventAndCallback('inputWithSearchWindow_afterConstruction');
     }
 
     addToDomWindow(){
@@ -169,15 +171,6 @@ class InputWithSearchWindow{
                 protectedStatus: true
             },
             {
-                name: 'resize',
-                domElement: window,
-                events: 'resize',
-                fn: () => {
-                    this.reSetPosition();
-                },
-                protectedStatus: true
-            },
-            {
                 name: 'clickOuter',
                 domElement: document,
                 events: 'click',
@@ -242,6 +235,24 @@ class InputWithSearchWindow{
                             relativeClass.close();
                         }
                     }
+                },
+                protectedStatus: true
+            },
+            {
+                name: 'watcherPosition',
+                domElement: wrapper,
+                events: 'inputWithSearchWindow_afterConstruction',
+                fn: () => {
+                    this._addWatcherPosition();
+                },
+                protectedStatus: true
+            },
+            {
+                name: 'removeWatcherPosition',
+                domElement: wrapper,
+                events: 'inputWithSearchWindow_destruction',
+                fn: () => {
+                    this._removeWatcherPosition();
                 },
                 protectedStatus: true
             }
@@ -514,7 +525,8 @@ class InputWithSearchWindow{
         return {
             'inputWithSearchWindow_clickOnElementList': false,
             'inputWithSearchWindow_destruction': false,
-            'inputWithSearchWindow_changeContent': false
+            'inputWithSearchWindow_changeContent': false,
+            'inputWithSearchWindow_afterConstruction': false
         };
     }
 
@@ -661,6 +673,20 @@ class InputWithSearchWindow{
         this.addInfoToList(
             InputWithSearchWindow.constructWaitThrobber()
         );
+    }
+
+    _addWatcherPosition(){
+        let element = this.getRelativeObject().getWorkDomElement();
+        this._watcher = new WatcherPosition(
+            element,
+            () => {
+                this.reSetPosition();
+            }
+        );
+    }
+
+    _removeWatcherPosition(){
+        this._watcher.destructor();
     }
 
     static constructElement(data, value, numb, fn, classes){

@@ -28,6 +28,30 @@ class InputWithSearchForWindow{
         };
 
         weakMapIWS.setDataWeakMapIWS(this, protectedFields);
+
+        let mutationObserver = new MutationObserver(mutations => {
+            mutations.forEach(mutation => {
+                Array.prototype.slice.call(mutation.removedNodes, 0).filter(element => {
+                    if (this.checkInit(element)){
+                        this.get(element).destructor();
+                    } else {
+                        if (element instanceof HTMLElement){
+                            Array.prototype.slice.call(
+                                InputWithSearch.getInHtmlElementAllElementsByClass(element),
+                                0
+                            ).forEach(elementWasInit => {
+                                this.get(elementWasInit).destructor();
+                            });
+                        }
+                    }
+                });
+            });
+        });
+
+        mutationObserver.observe(document.documentElement, {
+            childList: true,
+            subtree: true,
+        });
     }
 
     /**
@@ -38,21 +62,26 @@ class InputWithSearchForWindow{
      * @returns {InputWithSearch}
      */
     getElement(domElement, objectConfig = {}, themes = ''){
+        let element = this._getElementFromPage(domElement);
 
-        const checkIdFn = (someData) => {
-            if (typeof someData === 'string'){
-                return checkHTMLfn(document.getElementById(someData));
+        if (element !== false){
+            if (!this.checkInit(element)){
+                this.init(element, objectConfig, themes);
             }
-            return false;
-        };
+            return this.get(element);
+        }
 
-        const checkHTMLfn = (someData) => {
-            return someData instanceof HTMLElement;
-        };
+        throw new Error(`Нет валидного DOM-элемента для выдачи ${domElement}`);
+    }
 
-        const getElemById = (stringId) => {
-            return checkIdFn(stringId) ? document.getElementById(stringId) : false;
-        };
+    /**
+     * InitFunction
+     * @param {HTMLElement} element
+     * @param {object} objectConfig
+     * @param {string|string[]} themes
+     * @returns {InputWithSearch}
+     */
+    init(element, objectConfig = {}, themes = ''){
 
         const getListAvailableThemeConfig = () => {
 
@@ -74,44 +103,79 @@ class InputWithSearchForWindow{
             return retObject;
         };
 
+        let list = weakMapIWS.getDataWeakMapIWS(this).list;
+        let availableThemeConfigs = Object.values(getListAvailableThemeConfig());
+        for (let objectTheme of availableThemeConfigs){
+            let fn = objectTheme.fnRunBeforeStart;
+            if (typeof fn === 'function'){
+                fn.call(null, element);
+            }
+        }
+        for (let objectTheme of availableThemeConfigs){
+            let objectData = objectTheme.objectData;
+            if (Object.keys(objectData).length){
+                let classes = funcs.sliceObjectArrays(objectData.classes, objectConfig.classes);
+                objectConfig = funcs.extend(true, {}, objectData, objectConfig);
+                objectConfig.classes = classes;
+            }
+        }
+        let exemplar = new InputWithSearch(element, objectConfig);
+        list.addElement(element, exemplar);
+        for (let objectTheme of availableThemeConfigs){
+            let fn = objectTheme.fnRunOnStart;
+            if (typeof fn === 'function'){
+                fn.call(null, exemplar);
+            }
+        }
+
+        return list.getElement(element);
+    }
+
+    /**
+     * Get element from page by string or return HTMLElement
+     * @param {HTMLElement|string} domElement
+     * @return {boolean|HTMLElement}
+     * @private
+     */
+    _getElementFromPage(domElement){
+        const checkIdFn = (someData) => {
+            if (typeof someData === 'string'){
+                return checkHTMLfn(document.getElementById(someData));
+            }
+            return false;
+        };
+
+        const checkHTMLfn = (someData) => {
+            return someData instanceof HTMLElement;
+        };
+
+        const getElemById = (stringId) => {
+            return checkIdFn(stringId) ? document.getElementById(stringId) : false;
+        };
+
         let element = checkHTMLfn(domElement)
             ? domElement
             : getElemById(domElement);
 
-        if (element !== false){
+        return element;
+    }
 
-            let list = weakMapIWS.getDataWeakMapIWS(this).list;
+    /**
+     * Get element
+     * @param {HTMLElement|string} domElement
+     * @return {InputWithSearch|undefined}
+     */
+    get(domElement){
+        return weakMapIWS.getDataWeakMapIWS(this).list.getElement(this._getElementFromPage(domElement));
+    }
 
-            if (!list.hasElement(element)){
-                let availableThemeConfigs = Object.values(getListAvailableThemeConfig());
-                for (let objectTheme of availableThemeConfigs){
-                    let fn = objectTheme.fnRunBeforeStart;
-                    if (typeof fn === 'function'){
-                        fn.call(null, element);
-                    }
-                }
-                for (let objectTheme of availableThemeConfigs){
-                    let objectData = objectTheme.objectData;
-                    if (Object.keys(objectData).length){
-                        let classes = funcs.sliceObjectArrays(objectData.classes, objectConfig.classes);
-                        objectConfig = funcs.extend(true, {}, objectData, objectConfig);
-                        objectConfig.classes = classes;
-                    }
-                }
-                let exemplar = new InputWithSearch(element, objectConfig);
-                list.addElement(element, exemplar);
-                for (let objectTheme of availableThemeConfigs){
-                    let fn = objectTheme.fnRunOnStart;
-                    if (typeof fn === 'function'){
-                        fn.call(null, exemplar);
-                    }
-                }
-            }
-
-            return list.getElement(element);
-        }
-
-        throw new Error(`Нет валидного DOM-элемента для выдачи ${domElement}`);
+    /**
+     * Check dom element init
+     * @param {HTMLElement} domElement
+     * @return {boolean}
+     */
+    checkInit(domElement){
+        return weakMapIWS.getDataWeakMapIWS(this).list.hasElement(domElement);
     }
 
     /**

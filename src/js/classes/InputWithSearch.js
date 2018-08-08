@@ -40,7 +40,14 @@ class InputWithSearch{
 
         InputWithSearch.addAttrToDomInput(this.getWorkDomElement());
 
+        this._toggleInitClass();
         this.fireEventAndCallback('inputWithSearch_afterInit');
+    }
+
+    _toggleInitClass(){
+        this._domElement.classList.toggle(
+            InputWithSearch.getBaseClassesByKey('initialize')[0]
+        );
     }
 
     getWorkDomElement(useInitDomImportant = false){
@@ -607,6 +614,7 @@ class InputWithSearch{
         this.removeEventListeners();
         InputWithSearch.setInputActive(HTMLElement, false);
         HTMLElement.classList.remove(...this.getClassesByKey('input'));
+        this._toggleInitClass();
         weakMapIWS.getDataWeakMapIWS(InputWithSearchForWindow.getInstance()).list.removeElement(HTMLElement);
     }
 
@@ -620,6 +628,7 @@ class InputWithSearch{
 
     static get baseClasses(){
         return {
+            initialize: ['InputWithSearchRoot'],
             input: ['InputWithSearch'],
             bodyOpen: ['InputWithSearchOpen']
         };
@@ -636,7 +645,7 @@ class InputWithSearch{
             writable: false
         };
 
-        const notChangeableKeys = ['input', 'bodyOpen'];
+        const notChangeableKeys = ['input', 'bodyOpen', 'initialize'];
 
         const generateObjectForChange = (keys, object) => {
             return keys.reduce((acc, current) => {
@@ -702,6 +711,10 @@ class InputWithSearch{
             'inputWithSearch_changeActive': false,
             'inputWithSearch_changeHover': false
         };
+    }
+
+    static getInHtmlElementAllElementsByClass(domElement){
+        return domElement.querySelectorAll(`.${this.getBaseClassesByKey('initialize')[0]}`);
     }
 
     static get settings(){

@@ -66,7 +66,10 @@ const cbBeforeDestruct = (e) => {
     HTMLElem.removeEventListener('inputWithSearch_beforeInit', cbBeforeStart);
     HTMLElem.removeEventListener('inputWithSearch_beforeDestruction', cbBeforeDestruct);
     HTMLElem.style.display = '';
-    HTMLElem.parentElement.removeChild(document.getElementById(constructIdSelect(object.id)));
+    let delegateElement = document.getElementById(constructIdSelect(object.id));
+    if (delegateElement !== null){
+        HTMLElem.parentElement.removeChild(delegateElement);
+    }
 };
 
 const cbOnChangeData = (...args) => {
