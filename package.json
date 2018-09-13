@@ -1,9 +1,10 @@
 {
   "name": "inputwithsearch",
-  "version": "1.0.13",
+  "version": "1.0.14",
   "description": "project for cutsom search and some other things.",
   "main": "index.js",
-  "author": "neiasut",
+  "repository": "https://github.com/Neiasut/inputWithSearch",
+  "author": "neiasut <kerlaeeda@gmail.com>",
   "license": "MIT",
   "dependencies": {
     "babel-polyfill": "^6.26.0"

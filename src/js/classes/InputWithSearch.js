@@ -11,6 +11,7 @@ class InputWithSearch{
     constructor(domElement, settings = {}){
 
         this._domElement = domElement;
+        this._delegateElement = false;
         this.settings = InputWithSearch.settings;
         this.updateSettings(settings);
         this.createCustomContainer();
@@ -51,9 +52,9 @@ class InputWithSearch{
     }
 
     getWorkDomElement(useInitDomImportant = false){
-        return useInitDomImportant || !checkDomElement(this.settings.delegateElement)
+        return useInitDomImportant || !checkDomElement(this._delegateElement)
             ? this._domElement
-            : this.settings.delegateElement;
+            : this._delegateElement;
     }
 
     @readOnly
@@ -234,7 +235,59 @@ class InputWithSearch{
             this.settings.classes = classes;
         }
         /* end update classes */
+
+        this._updateDelegateElement(newSettings.delegateElement);
     }
+
+    /* section delegate elements */
+
+    _updateDelegateElement(newDelegateElement) {
+        let returnValue = false;
+        if (typeof newDelegateElement !== 'undefined') {
+            let newElement = newDelegateElement;
+            let constructed = false;
+            if (typeof newDelegateElement === 'function') {
+                newElement = newDelegateElement(this.getWorkDomElement(true), this.id);
+                constructed = true;
+            }
+            this._removeDelegateElement();
+            if (newElement instanceof HTMLElement) {
+                this._addDelegateElement(newElement, constructed);
+                returnValue = newElement;
+            }
+        }
+        this._delegateElement = returnValue;
+    }
+
+    /**
+     * Configure domElement
+     * @param {HTMLElement} domElement
+     * @param {boolean} constructed
+     * @private
+     */
+    _addDelegateElement(domElement, constructed) {
+        if (constructed) {
+            domElement.setAttribute('data-iws-generated', this.id);
+        } else {
+            domElement.setAttribute('data-iws-used', this.id);
+        }
+        domElement.setAttribute('data-iws-delegate', this.id);
+    }
+
+    _removeDelegateElement() {
+        let delegateElement = this._delegateElement;
+        if (delegateElement !== false) {
+            if (delegateElement.getAttribute('data-iws-generated')) {
+                delegateElement.parentElement.removeChild(delegateElement);
+            } else {
+                delegateElement.removeAttribute('data-iws-used');
+                delegateElement.removeAttribute('data-iws-delegate');
+            }
+        }
+        this._delegateElement = false;
+    }
+
+    /* end section delegate elements */
 
     changeStatus(addStatuses = [], removeStatuses = []){
         if (typeof this.status === 'undefined'){
@@ -616,6 +669,7 @@ class InputWithSearch{
         HTMLElement.classList.remove(...this.getClassesByKey('input'));
         this._toggleInitClass();
         weakMapIWS.getDataWeakMapIWS(InputWithSearchForWindow.getInstance()).list.removeElement(HTMLElement);
+        this._removeDelegateElement();
     }
 
     static setInputActive(input, flag){

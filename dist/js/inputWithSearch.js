@@ -789,6 +789,7 @@ var InputWithSearch = (_class = function () {
         _initDefineProp(this, 'id', _descriptor, this);
 
         this._domElement = domElement;
+        this._delegateElement = false;
         this.settings = InputWithSearch.settings;
         this.updateSettings(settings);
         this.createCustomContainer();
@@ -832,7 +833,7 @@ var InputWithSearch = (_class = function () {
         value: function getWorkDomElement() {
             var useInitDomImportant = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : false;
 
-            return useInitDomImportant || !checkDomElement(this.settings.delegateElement) ? this._domElement : this.settings.delegateElement;
+            return useInitDomImportant || !checkDomElement(this._delegateElement) ? this._domElement : this._delegateElement;
         }
     }, {
         key: 'getListeners',
@@ -989,7 +990,66 @@ var InputWithSearch = (_class = function () {
                 this.settings.classes = classes;
             }
             /* end update classes */
+
+            this._updateDelegateElement(newSettings.delegateElement);
         }
+
+        /* section delegate elements */
+
+    }, {
+        key: '_updateDelegateElement',
+        value: function _updateDelegateElement(newDelegateElement) {
+            var returnValue = false;
+            if (typeof newDelegateElement !== 'undefined') {
+                var newElement = newDelegateElement;
+                var constructed = false;
+                if (typeof newDelegateElement === 'function') {
+                    newElement = newDelegateElement(this.getWorkDomElement(true), this.id);
+                    constructed = true;
+                }
+                this._removeDelegateElement();
+                if (newElement instanceof HTMLElement) {
+                    this._addDelegateElement(newElement, constructed);
+                    returnValue = newElement;
+                }
+            }
+            this._delegateElement = returnValue;
+        }
+
+        /**
+         * Configure domElement
+         * @param {HTMLElement} domElement
+         * @param {boolean} constructed
+         * @private
+         */
+
+    }, {
+        key: '_addDelegateElement',
+        value: function _addDelegateElement(domElement, constructed) {
+            if (constructed) {
+                domElement.setAttribute('data-iws-generated', this.id);
+            } else {
+                domElement.setAttribute('data-iws-used', this.id);
+            }
+            domElement.setAttribute('data-iws-delegate', this.id);
+        }
+    }, {
+        key: '_removeDelegateElement',
+        value: function _removeDelegateElement() {
+            var delegateElement = this._delegateElement;
+            if (delegateElement !== false) {
+                if (delegateElement.getAttribute('data-iws-generated')) {
+                    delegateElement.parentElement.removeChild(delegateElement);
+                } else {
+                    delegateElement.removeAttribute('data-iws-used');
+                    delegateElement.removeAttribute('data-iws-delegate');
+                }
+            }
+            this._delegateElement = false;
+        }
+
+        /* end section delegate elements */
+
     }, {
         key: 'changeStatus',
         value: function changeStatus() {
@@ -1397,6 +1457,7 @@ var InputWithSearch = (_class = function () {
             (_HTMLElement$classLis = HTMLElement.classList).remove.apply(_HTMLElement$classLis, _toConsumableArray(this.getClassesByKey('input')));
             this._toggleInitClass();
             _weakMapIWS2.default.getDataWeakMapIWS(_InputWithSearchForWindow2.default.getInstance()).list.removeElement(HTMLElement);
+            this._removeDelegateElement();
         }
     }, {
         key: 'setCustomData',
@@ -3604,13 +3665,7 @@ var _defaultExportTheme = __webpack_require__(/*! ../defaultExportTheme */ "./sr
 
 var _defaultExportTheme2 = _interopRequireDefault(_defaultExportTheme);
 
-var _functions = __webpack_require__(/*! ../../functions/functions */ "./src/js/functions/functions.js");
-
-var _functions2 = _interopRequireDefault(_functions);
-
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
-
-function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr2 = Array(arr.length); i < arr.length; i++) { arr2[i] = arr[i]; } return arr2; } else { return Array.from(arr); } }
 
 /**
  * Get from event object element
@@ -3622,42 +3677,6 @@ var getFromEventObject = function getFromEventObject(e) {
 };
 
 /**
- * construct domElement for delegate select
- * @param {string} text
- * @return {string}
- */
-var constructorDelegateElement = function constructorDelegateElement(text) {
-    return '\n    ' + text + '\n';
-};
-
-/**
- * Add delegateElement
- * @param {HTMLElement} toAppend
- * @param {string} id
- * @param {array} classes
- */
-var addDelegateElement = function addDelegateElement(toAppend, id) {
-    var _delegateElement$clas;
-
-    var classes = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : ['InputWithSearchSelect'];
-
-    var delegateElement = document.createElement('div');
-    delegateElement.setAttribute('id', id);
-    (_delegateElement$clas = delegateElement.classList).add.apply(_delegateElement$clas, _toConsumableArray(classes));
-    delegateElement.innerHTML = constructorDelegateElement('delegateElement');
-    _functions2.default.insertAfter(delegateElement, toAppend);
-};
-
-/**
- * Generate attribute id for select imitate
- * @param {string} objectId
- * @return {string}
- */
-var constructIdSelect = function constructIdSelect(objectId) {
-    return objectId + '_select';
-};
-
-/**
  * Callback for inputWithSearch_beforeInit event
  * @param e
  */
@@ -3665,11 +3684,20 @@ var cbBeforeStart = function cbBeforeStart(e) {
     var object = getFromEventObject(e);
     var domElement = object.getWorkDomElement(true);
     domElement.style.display = 'none';
-    var id = constructIdSelect(object.id);
-    addDelegateElement(domElement, id);
-    object.updateSettings({
-        delegateElement: document.getElementById(id)
+};
+
+var getArrayInfoFromSelect = function getArrayInfoFromSelect(selectDom) {
+    return Array.from(selectDom.querySelectorAll('option')).map(function (option) {
+        return {
+            text: option.textContent,
+            value: option.value,
+            selected: option.selected
+        };
     });
+};
+
+var checkActiveObjectInfoFromSelect = function checkActiveObjectInfoFromSelect(objectCheck) {
+    return objectCheck.selected;
 };
 
 /**
@@ -3685,28 +3713,60 @@ var cbBeforeDestruct = function cbBeforeDestruct(e) {
     HTMLElem.removeEventListener('inputWithSearch_beforeInit', cbBeforeStart);
     HTMLElem.removeEventListener('inputWithSearch_beforeDestruction', cbBeforeDestruct);
     HTMLElem.style.display = '';
-    var delegateElement = document.getElementById(constructIdSelect(object.id));
-    if (delegateElement !== null) {
-        HTMLElem.parentElement.removeChild(delegateElement);
+};
+
+var cbOnChangeData = function cbOnChangeData(e) {
+    /**
+     * @type {InputWithSearch}
+     */
+    var object = e.detail.inputWithSearch.object;
+    var select = object.getWorkDomElement(true);
+    var data = object.getDataByKey(e.detail.inputWithSearch.key);
+    if (select.value !== data.value) {
+        select.value = data.value;
+        if ('createEvent' in document) {
+            var evt = document.createEvent('HTMLEvents');
+            evt.initEvent('change', false, true);
+            select.dispatchEvent(evt);
+        } else {
+            select.fireEvent('onchange');
+        }
     }
 };
 
-var cbOnChangeData = function cbOnChangeData() {
-    for (var _len = arguments.length, args = Array(_len), _key = 0; _key < _len; _key++) {
-        args[_key] = arguments[_key];
+var callbackOnExternalChange = function callbackOnExternalChange(e) {
+    var target = e.target;
+    var selected = target.value;
+    var object = window.inputWithSearch.getElement(target);
+    var activeObject = object.getDataByKey(object.getActiveKey());
+    if (activeObject.value !== selected) {
+        object.setActive(function (data) {
+            return data.value === selected;
+        });
     }
-
-    console.log(args);
 };
 
 exports.default = (0, _defaultExportTheme2.default)('select', {
-    onEvents: 'click'
+    onEvents: 'click',
+    constructors: {
+        element: function element(objectInfo) {
+            return objectInfo.text;
+        }
+    },
+    fns: {
+        dataToInputByClick: function dataToInputByClick(data) {
+            return data.data.text;
+        }
+    }
 }, function (object) {
-    object.setCustomData(['test', 'test2', 'test3']);
+    var domElement = object.getWorkDomElement(true);
+    object.setCustomData(getArrayInfoFromSelect(domElement));
+    object.setActive(checkActiveObjectInfoFromSelect);
+    object.listeners.addCustomRecord('changeActiveSelectTheme', 'inputWithSearch_changeActive', cbOnChangeData);
+    object.listeners.addCustomRecord('changeSelectTheme', 'change', callbackOnExternalChange);
 }, function (HTMLElem) {
     HTMLElem.addEventListener('inputWithSearch_beforeInit', cbBeforeStart);
     HTMLElem.addEventListener('inputWithSearch_beforeDestruction', cbBeforeDestruct);
-    //HTMLElem.addEventListener('inputWithSearch_changeActive', cbOnChangeData);
 });
 
 /***/ }),

@@ -89,11 +89,24 @@
         <h4>Typical open with info</h4>
         <div data-iws-data="<b>Test</b>Test2test4" id="test8">Hover on me</div>
     </div>
+    <div class="container">
+        <div class="wrapper">
+            <div class="element">
+                <label for="test9">Test select with delegate wrapper</label>
+                <select id="test9">
+                    <option>Test</option>
+                    <option>Test2</option>
+                    <option>Test3</option>
+                    <option>Test4</option>
+                </select>
+                <div id="imitateWrapperSelect9"></div>
+            </div>
+        </div>
+    </div>
 
     <script src="../node_modules/babel-polyfill/dist/polyfill.min.js"></script>
     <script src="../node_modules/perfect-scrollbar/dist/perfect-scrollbar.min.js"></script>
     <script src="../dist/js/inputWithSearch.js"></script>
-    <script src="../dist/js/inputWithSearchSelect.js"></script>
 
     <script>
 
@@ -205,19 +218,32 @@
             ]
         );
 
+        const insertAfter = (newNode, referenceNode) => {
+            referenceNode.parentNode.insertBefore(newNode, referenceNode.nextSibling);
+        };
+
+        const addDelegateElement = toAppend => {
+            let id = 'testID';
+            let delegateElement = document.createElement('div');
+            delegateElement.setAttribute('data-iws-select-generated', id);
+            insertAfter(delegateElement, toAppend);
+
+            return document.querySelector(`[data-iws-select-generated="${id}"]`);
+        };
+
         inputWithSearch.getElement('test7', {
-            /*
-            callbacks: {
-                'inputWithSearch_changeActive': (...args) => {
-                    console.log('change active', args);
-                }
-            }
-            */
+            delegateElement: addDelegateElement
         }, ['select']);
 
         inputWithSearch.getElement('test7')._domElement.addEventListener('inputWithSearch_changeActive', (e) => {
             console.log(e.detail.inputWithSearch.key);
         });
+
+        inputWithSearch.getElement('test9', {
+            delegateElement: document.getElementById('imitateWrapperSelect9'),
+            repositionActiveToTop: false
+        }, ['select']);
+        //document.getElementById('test9').addEventListener('change', () => {console.log('change select')});
 
         inputWithSearch.getElement('test8', {
             onEvents: 'hover',
