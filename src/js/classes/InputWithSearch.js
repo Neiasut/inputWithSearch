@@ -250,6 +250,10 @@ class InputWithSearch{
                 newElement = newDelegateElement(this.getWorkDomElement(true), this.id);
                 constructed = true;
             }
+            if (newDelegateElement === true) {
+                newElement = constructDelegateElement(this.getWorkDomElement(true));
+                constructed = true;
+            }
             this._removeDelegateElement();
             if (newElement instanceof HTMLElement) {
                 this._addDelegateElement(newElement, constructed);
@@ -870,5 +874,10 @@ const checkDomElement = element => element instanceof HTMLElement;
 const checkDomOnInput = (domElement) => {
     return domElement.tagName === 'INPUT';
 } ;
+
+const constructDelegateElement = toAppend => {
+    let delegateElement = document.createElement('div');
+    return funcs.insertAfter(delegateElement, toAppend);
+};
 
 export default InputWithSearch;

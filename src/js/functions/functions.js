@@ -93,7 +93,7 @@ const mergeListArraysWithoutDuplicates = (oldArr, newArr) => {
 };
 
 const insertAfter = (newNode, referenceNode) => {
-    referenceNode.parentNode.insertBefore(newNode, referenceNode.nextSibling);
+    return referenceNode.parentNode.insertBefore(newNode, referenceNode.nextSibling);
 };
 
 /**

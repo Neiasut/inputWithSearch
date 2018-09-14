@@ -1007,6 +1007,10 @@ var InputWithSearch = (_class = function () {
                     newElement = newDelegateElement(this.getWorkDomElement(true), this.id);
                     constructed = true;
                 }
+                if (newDelegateElement === true) {
+                    newElement = constructDelegateElement(this.getWorkDomElement(true));
+                    constructed = true;
+                }
                 this._removeDelegateElement();
                 if (newElement instanceof HTMLElement) {
                     this._addDelegateElement(newElement, constructed);
@@ -1790,6 +1794,11 @@ var checkDomElement = function checkDomElement(element) {
 
 var checkDomOnInput = function checkDomOnInput(domElement) {
     return domElement.tagName === 'INPUT';
+};
+
+var constructDelegateElement = function constructDelegateElement(toAppend) {
+    var delegateElement = document.createElement('div');
+    return _functions2.default.insertAfter(delegateElement, toAppend);
 };
 
 exports.default = InputWithSearch;
@@ -3325,7 +3334,7 @@ var mergeListArraysWithoutDuplicates = function mergeListArraysWithoutDuplicates
 };
 
 var insertAfter = function insertAfter(newNode, referenceNode) {
-    referenceNode.parentNode.insertBefore(newNode, referenceNode.nextSibling);
+    return referenceNode.parentNode.insertBefore(newNode, referenceNode.nextSibling);
 };
 
 /**
