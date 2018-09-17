@@ -3757,6 +3757,8 @@ var callbackOnExternalChange = function callbackOnExternalChange(e) {
 
 exports.default = (0, _defaultExportTheme2.default)('select', {
     onEvents: 'click',
+    delegateElement: true,
+    repositionActiveToTop: false,
     constructors: {
         element: function element(objectInfo) {
             return objectInfo.text;

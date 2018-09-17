@@ -74,6 +74,8 @@ export default defaultExportTheme(
     'select',
     {
         onEvents: 'click',
+        delegateElement: true,
+        repositionActiveToTop: false,
         constructors: {
             element: objectInfo => {
                 return objectInfo.text;

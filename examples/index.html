@@ -98,6 +98,8 @@
                     <option>Test2</option>
                     <option>Test3</option>
                     <option>Test4</option>
+                    <option>Test5</option>
+                    <option>Test6</option>
                 </select>
                 <div id="imitateWrapperSelect9"></div>
             </div>
@@ -226,13 +228,25 @@
             let id = 'testID';
             let delegateElement = document.createElement('div');
             delegateElement.setAttribute('data-iws-select-generated', id);
+            delegateElement.classList.add('ImitateSelect');
+            delegateElement.innerHTML = '<div class="ImitateSelect-Text"></div><b>Teststt</b>';
             insertAfter(delegateElement, toAppend);
 
             return document.querySelector(`[data-iws-select-generated="${id}"]`);
         };
 
         inputWithSearch.getElement('test7', {
-            delegateElement: addDelegateElement
+            /*
+            delegateElement: addDelegateElement,
+            fns: {
+                fnSetValueToInput: (elementDOM, value) => {
+                    elementDOM.querySelector('.ImitateSelect-Text').textContent = value;
+                },
+                fnGetValueFromInput: elementDOM => {
+                    return elementDOM.querySelector('.ImitateSelect-Text').textContent;
+                }
+            }
+            */
         }, ['select']);
 
         inputWithSearch.getElement('test7')._domElement.addEventListener('inputWithSearch_changeActive', (e) => {
@@ -240,10 +254,9 @@
         });
 
         inputWithSearch.getElement('test9', {
-            delegateElement: document.getElementById('imitateWrapperSelect9'),
-            repositionActiveToTop: false
+            delegateElement: document.getElementById('imitateWrapperSelect9')
         }, ['select']);
-        //document.getElementById('test9').addEventListener('change', () => {console.log('change select')});
+        document.getElementById('test9').addEventListener('change', () => {console.log('change select')});
 
         inputWithSearch.getElement('test8', {
             onEvents: 'hover',
