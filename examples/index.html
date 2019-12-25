@@ -38,9 +38,17 @@
         }
         .wrapperTest4{
             position: fixed;
-            left: 20px;
-            top: 100px;
+            top: 150px;
             z-index: 5;
+        }
+        [data-align="left"] {
+            left: 0;
+        }
+        [data-align="center"] {
+            left: 50%;
+        }
+        [data-align="right"] {
+            right: 0;
         }
         .wrapperTest5{
             position: fixed;
@@ -73,7 +81,12 @@
             <div class="element"><label for="test3">Label3</label><input type="text" id="test3"></div>
         </div>
     </div>
-    <div class="wrapperTest4"><div id="test4">Test</div></div>
+    <div class="wrapperTest4" data-align="left"><div id="test4">Test 4</div></div>
+    <div>
+        <button id="to_left">To left</button>
+        <button id="to_center">To center</button>
+        <button id="to_right">To right</button>
+    </div>
     <div class="wrapperTest5"><div id="test5">Test</div></div>
     <div class="wrapperTest6"><div id="test6"><span class="trrr">Test</span></div></div>
     <div class="wrapperTest7">
@@ -102,6 +115,16 @@
                     <option>Test6</option>
                 </select>
                 <div id="imitateWrapperSelect9"></div>
+            </div>
+        </div>
+    </div>
+
+    <div class="container">
+        <div class="wrapper">
+            <div class="element">
+                <label for="test10">Test clone content</label>
+                <div id="test10">Some text</div>
+                <div id="for-test10-content">hidden content</div>
             </div>
         </div>
     </div>
@@ -166,6 +189,12 @@
                     relativeDomElement.innerHTML = value + Math.random();
                 }
             },
+            cssParamsWindow: {
+                minWidth: 150,
+                maxWidth: 400,
+                margin: [10, 10, 10, 10],
+                width: 300
+            },
             baseWindowEventsActive: {
                 interceptionEvents: false,
                 mouseEnterElement: false,
@@ -178,6 +207,17 @@
                 'test3'
             ]
         );
+
+        const wrapper4 = document.querySelector('.wrapperTest4');
+        document.getElementById('to_left').addEventListener('click', () => {
+            wrapper4.setAttribute('data-align', 'left');
+        });
+        document.getElementById('to_center').addEventListener('click', () => {
+           wrapper4.setAttribute('data-align', 'center');
+        });
+        document.getElementById('to_right').addEventListener('click', () => {
+            wrapper4.setAttribute('data-align', 'right');
+        });
 
         inputWithSearch.getElement('test5', {
             onEvents: 'hover',
@@ -263,6 +303,43 @@
             closeBtn: true,
             triangle: true
         }, ['openInfo']);
+
+        /* 10 */
+
+        document.getElementById('for-test10-content').addEventListener('click', () => {
+           console.log('click');
+        });
+
+        inputWithSearch.getElement('test10', {
+            onEvents: 'click',
+            triangle: true,
+            classes: {
+                wrapper: ['test']
+            },
+            fns: {
+                fnSetValueToInput: (relativeDomElement, value) => {}
+            },
+            cssParamsWindow: {
+                width: 'inherit',
+                maxWidth: 1000
+            },
+            baseWindowEventsActive: {
+                interceptionEvents: false,
+                mouseEnterElement: false,
+                clickElement: false
+            },
+            constructors: {
+                element: data => {
+                    return data;
+                }
+            }
+        }).setCustomData(
+            [
+                document.getElementById('for-test10-content')
+            ]
+        );
+
+        /* end 10 */
 
     </script>
 </body>

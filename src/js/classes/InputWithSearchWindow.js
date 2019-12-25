@@ -16,7 +16,6 @@ class InputWithSearchWindow{
         this.setBlockHoverSelected();
 
         this.setStatus();
-
         this.reSetPosition();
         this.fireEventAndCallback('inputWithSearchWindow_afterConstruction');
     }
@@ -101,12 +100,22 @@ class InputWithSearchWindow{
         return this.elements[key];
     }
 
-    addInfoToList(htmlToList, plus = false){
-        if (plus){
-            this.getElementByKey('wrapperList').innerHTML = this.getElementByKey('wrapperList').innerHTML + htmlToList;
-            return;
+    addInfoToList(htmlToList, plus = false) {
+        const wrapper = this.getElementByKey('wrapperList');
+        if (typeof htmlToList === 'string') {
+            if (plus){
+                wrapper.innerHTML = this.getElementByKey('wrapperList').innerHTML + htmlToList;
+                return;
+            }
+            wrapper.innerHTML = htmlToList;
+        } else {
+            if (plus) {
+                wrapper.appendChild(htmlToList);
+                return;
+            }
+            wrapper.innerHTML = '';
+            wrapper.appendChild(htmlToList);
         }
-        this.getElementByKey('wrapperList').innerHTML = htmlToList;
     }
 
     destructor(){
@@ -430,73 +439,60 @@ class InputWithSearchWindow{
         let {window: customFnResize, triangle: customFnRePositionTriangle} = customFunctionForResizing;
 
         if (checkOnFunction(customFnResize)) {
-            customFnResize(elem, cssParams);
+            customFnResize(elem, cssParams, this.elements);
         } else {
-            let elem_character = elem.getBoundingClientRect();
-            let scroll = window.pageYOffset || document.documentElement.scrollTop;
-            let style = this.elements.wrapper.style;
-            let width = elem_character.width;
-            let winWidth = window.innerWidth;
-            let [mTop, mRight, mBot, mLeft] = cssParams.margin;
-            let availablePlaceWidth = winWidth - mLeft - mRight;
-            let seekWidthTo = this.settings.cssParams.seekWidthTo;
-
-            if (seekWidthTo !== 'none') {
-                switch (seekWidthTo) {
-                    case 'max':
-                        width = cssParams.maxWidth;
-                        break;
-                    case 'min':
-                        width = cssParams.minWidth;
-                        break;
-                }
+            const { wrapper } = this.elements;
+            const { margin, minWidth, maxWidth, width: widthWrapper } = cssParams;
+            const [mTop, , mBot] = margin;
+            const scroll = window.pageYOffset || document.documentElement.scrollTop;
+            wrapper.style.maxWidth = maxWidth !== 'none' ? maxWidth + 'px' : 'none';
+            wrapper.style.minWidth = minWidth !== 'none' ? minWidth + 'px' : 'none';
+            const headerRect = elem.getBoundingClientRect();
+            let widthString;
+            switch (widthWrapper) {
+                case 'auto':
+                    widthString = 'auto';
+                    break;
+                case 'inherit':
+                    widthString = headerRect.width + 'px';
+                    break;
+                default:
+                    widthString = widthWrapper + 'px';
             }
+            wrapper.style.width = widthString;
+            wrapper.style.marginBottom = mBot + 'px';
 
-            if (availablePlaceWidth < width) {
-                width = availablePlaceWidth;
-            }
-
-            if (width < cssParams.minWidth){
-                width = cssParams.minWidth;
-            }
-            if (width > cssParams.maxWidth){
-                width = cssParams.maxWidth;
-            }
-
-            let left = elem_character.left + (elem_character.width - width)/2;
-
-            if (left < mLeft){
-                left = mLeft;
-            }
-            if (winWidth - (left + width) < mRight){
-                left = winWidth - width - mRight;
-            }
-
-            style.top = scroll + elem_character.bottom - (scroll + document.body.getBoundingClientRect().top) + 'px';
-            style.left = Math.ceil(left) + 'px';
-            style.width = width + 'px';
-            style.position = 'absolute';
-            if (mTop > 0){
-                style.marginTop = mTop + 'px';
-            }
-            if (mBot > 0){
-                style.marginBottom = mBot + 'px';
-            }
-        }
-
-        let triangle = this.getElementByKey('wrapperTriangle');
-
-        if (triangle !== null) {
-
-            let elem_character = elem.getBoundingClientRect();
-            let window_character = this.elements.wrapper.getBoundingClientRect();
-
-            if (checkOnFunction(customFnRePositionTriangle)) {
-                customFnRePositionTriangle(triangle, elem, cssParams);
+            const top = scroll + headerRect.bottom + mTop - (scroll + document.body.getBoundingClientRect().top);
+            const width = this.elements.wrapperSub.getBoundingClientRect().width;
+            wrapper.style.top = top + 'px';
+            let right = 0;
+            const winWidth = document.body.offsetWidth;
+            if (headerRect.right > winWidth) {
+                right = headerRect.right;
+            } else if (winWidth - headerRect.right < (width - headerRect.width) / 2) {
+                right = winWidth;
             } else {
-                let leftTriangle = (elem_character.left - window_character.left) + elem_character.width/2
-                    - triangle.offsetWidth/2;
-                triangle.style.left = Math.ceil(leftTriangle) + 'px';
+                right = headerRect.right + (width - headerRect.width) / 2;
+            }
+            if (right < width) {
+                right = width;
+            }
+            wrapper.style.right = (winWidth - right) + 'px';
+
+            let triangle = this.getElementByKey('wrapperTriangle');
+
+            if (triangle !== null) {
+
+                let elem_character = elem.getBoundingClientRect();
+                let window_character = this.elements.wrapper.getBoundingClientRect();
+
+                if (checkOnFunction(customFnRePositionTriangle)) {
+                    customFnRePositionTriangle(triangle, elem, cssParams);
+                } else {
+                    let leftTriangle = (elem_character.left - window_character.left) + elem_character.width/2
+                        - triangle.offsetWidth/2;
+                    triangle.style.left = Math.ceil(leftTriangle) + 'px';
+                }
             }
         }
     }
@@ -560,7 +556,7 @@ class InputWithSearchWindow{
             margin: [0, 10, 0, 10],
             minWidth: 200,
             maxWidth: 300,
-            seekWidthTo: 'none'
+            width: 'auto'
         };
     }
 
@@ -643,6 +639,8 @@ class InputWithSearchWindow{
                 }
             }
         }
+
+        this.reSetPosition();
     }
 
     setToMessage(typeMessage, params){
@@ -655,6 +653,8 @@ class InputWithSearchWindow{
                 this.getClassesByKey('message')
             )
         );
+
+        this.reSetPosition();
     }
 
     setToError(...args){
@@ -666,6 +666,8 @@ class InputWithSearchWindow{
                 this.settings.constructors['error']
             )
         );
+
+        this.reSetPosition();
     }
 
     setToWait(){
@@ -673,6 +675,8 @@ class InputWithSearchWindow{
         this.addInfoToList(
             InputWithSearchWindow.constructWaitThrobber()
         );
+
+        this.reSetPosition();
     }
 
     _addWatcherPosition(){
@@ -690,11 +694,17 @@ class InputWithSearchWindow{
     }
 
     static constructElement(data, value, numb, fn, classes){
-        return `
-                <div class="${classes}" data-key="${data.key}" data-numb="${numb}">
-                    ${fn(data.data, value, funcs.highlightMatchesToString)}
-                </div>
-            `;
+        const wrapper = document.createElement('div');
+        wrapper.setAttribute('class', classes);
+        wrapper.setAttribute('data-key', data.key);
+        wrapper.setAttribute('data-numb', numb);
+        const info = fn(data.data, value, funcs.highlightMatchesToString);
+        if (typeof info === 'string') {
+            wrapper.innerHTML = info;
+        } else {
+            wrapper.appendChild(info);
+        }
+        return wrapper;
     }
 
     static constructMessage(typeMessage, params, fn, classes){
